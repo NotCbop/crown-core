@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " ..",
+    ".##",
+    "--,"
+  ],
+  "key": {
+    "#": "minecraft:stone_button",
+    ".": "minecraft:iron_nugget",
+    "-": "minecraft:iron_ingot",
+    ",": "minecraft:redstone"
+  },
+  "result": {
+    "id": "videoplayer:radio_block",
+    "count": 1
+  }
+}

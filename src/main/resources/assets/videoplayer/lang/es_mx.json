@@ -1,0 +1,25 @@
+{
+  "itemGroup.videoplayer.items": "Reproductor de video",
+
+  "gui.tv_video_screen.title": "Pantalla de video de TV",
+  "gui.tv_video_screen.save": "Guardar",
+
+  "gui.radio_screen.title": "Radio",
+
+  "item.videoplayer.tv_block": "TV",
+  "item.videoplayer.radio_block": "Radio",
+  "item.videoplayer.hand_radio_block": "Radio portable",
+
+  "block.videoplayer.tv_block": "TV",
+  "block.videoplayer.radio_block": "Radio",
+  "block.videoplayer.hand_radio_block": "Radio portable",
+
+  "gui.tv_video_screen.play": "Reproducir",
+  "gui.tv_video_screen.pause": "Pausar",
+  "gui.tv_video_screen.stop": "Detener",
+  "gui.tv_video_screen.url_text": "URL:",
+  "gui.tv_video_screen.volume": "Volumen",
+  "gui.tv_video_screen.time": "Tiempo: %s / %s",
+
+  "customslider.videoplayer.value": "%s: %d%%"
+}

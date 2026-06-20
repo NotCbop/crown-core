@@ -1,0 +1,89 @@
+plugins {
+	id 'java'
+	id 'idea'
+	id 'fabric-loom' version "${loom_version}"
+}
+
+version = project.mod_version
+group = project.maven_group
+
+repositories {
+	maven { url 'https://repo.spongepowered.org/maven' }
+	maven { url 'https://jitpack.io' }
+	maven {
+		url 'https://www.cursemaven.com'
+		content {
+			includeGroup "curse.maven"
+		}
+	}
+	mavenCentral()
+}
+
+loom {
+	accessWidenerPath = file("src/main/resources/${modid}.accesswidener")
+	mods {
+		"${modid}" {
+			sourceSet sourceSets.main
+		}
+	}
+}
+
+dependencies {
+	// To change the versions see the gradle.properties file
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings loom.officialMojangMappings()
+
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+	// WaterMedia provides the multimedia (VLC) backend.
+	// `implementation` is the compile classpath; `include` bundles WaterMedia into our jar via
+	// Fabric jar-in-jar so players install a single mod (used with the owner's permission — its
+	// PolyForm Strict license otherwise forbids redistribution). WaterMedia ships as a finished
+	// multiloader mod jar (its own fabric.mod.json, shaded deps, no Minecraft-mapped refs), so it
+	// is nested as-is with no remapping.
+	implementation 'com.github.WaterMediaTeam:watermedia:2.1.37'
+	include 'com.github.WaterMediaTeam:watermedia:2.1.37'
+
+	// YouTube link resolution (WaterMedia 2.1.x dropped its YouTube extractor).
+	// Embedded directly into the mod jar (see the jar task below) so players need no extra download.
+	implementation 'com.github.sealedtx:java-youtube-downloader:3.2.5'
+}
+
+base {
+	archivesName = project.archives_base_name
+}
+
+processResources {
+	inputs.property "version", project.version
+
+	filesMatching("fabric.mod.json") {
+		expand "version": project.version
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	// Minecraft 1.20.5 (24w14a) upwards uses Java 21.
+	it.options.release = 21
+	it.options.compilerArgs += ['-Xmaxerrs', '2000', '-Xmaxwarns', '2000']
+}
+
+java {
+	withSourcesJar()
+
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+}
+
+jar {
+	from("LICENSE") {
+		rename { "${it}_${base.archivesName.get()}"}
+	}
+
+	// Embed java-youtube-downloader classes directly into the mod jar (gson is provided by Minecraft).
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	from {
+		configurations.runtimeClasspath.findAll { it.name.startsWith("java-youtube-downloader") }.collect { zipTree(it) }
+	}
+	exclude "META-INF/maven/**", "META-INF/*.MF", "module-info.class"
+}

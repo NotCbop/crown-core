@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "#.#",
+    ",-,",
+    "#c#"
+  ],
+  "key": {
+    "#": "minecraft:iron_ingot",
+    ",": "minecraft:copper_ingot",
+    ".": "minecraft:glowstone_dust",
+    "-": "minecraft:redstone",
+    "c": "minecraft:glass_pane"
+  },
+  "result": {
+    "id": "videoplayer:tv_block",
+    "count": 1
+  }
+}

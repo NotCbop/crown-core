@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "package": "com.github.NGoedix.videoplayer.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [],
+  "client": [
+    "ServerboundResourcePackPacketMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

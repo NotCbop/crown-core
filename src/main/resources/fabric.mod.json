@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "videoplayer",
+  "version": "${version}",
+
+  "name": "Crown Championship Utilities",
+  "description": "Crown Championship Utilities — play videos in Minecraft and show a kill feed.",
+  "authors": [
+    "cbop"
+  ],
+
+  "license": "CC0-1.0",
+
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.github.NGoedix.videoplayer.VideoPlayer"
+    ],
+    "client": [
+      "com.github.NGoedix.videoplayer.client.ClientHandler"
+    ]
+  },
+  "mixins": [
+    "videoplayer.mixins.json"
+  ],
+
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.11",
+    "java": ">=21"
+  },
+  "suggests": {
+    "watermedia": "2.1.37"
+  }
+}
