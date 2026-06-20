@@ -1,97 +1,84 @@
-# Crown Championship Utilities
+# Crown Core
 
-The official client mod for the **Crown Championship** server, on **Minecraft 1.21.11** (Fabric).
-Install it to get the full Crown Championship experience: in‑world video screens and a clean,
-team‑coloured **kill feed HUD** during PvP games.
+The official client mod for the **Crown Championship** server, built for **Minecraft 1.21.11** using Fabric.
+
+Install Crown Core to get the full Crown Championship experience, including a team-coloured **kill feed HUD**, in-game video screens, and resource-pack error reporting.
 
 ---
 
 ## ✨ What it adds
 
 ### 💀 Kill feed HUD
-- A polished, team‑coloured kill feed showing **attacker → method → victim**, with inline player
-  heads, kill‑method icons, and kill‑streak / assist badges.
-- Pill backgrounds use each player's **team colour**; `(YOU)` highlights your own kills and deaths.
-- Shows the same kills for **everyone in the game**, and the Crown Championship server hides it
-  automatically during non‑PvP rounds.
+
+* A polished, team-coloured kill feed showing **attacker → method → victim**, with inline player heads, kill-method icons, and kill-streak or assist badges.
 
 ### 📺 Video screens
-- Lets the Crown Championship server play videos and live streams on your screen during events
-  (intros, trailers, lobby content), powered by the WaterMedia / VLC backend.
 
-### 🧾 Resource‑pack failure reporter
-- If the Crown Championship resource pack fails to apply, the mod uploads the relevant log tail to
-  [mclo.gs](https://mclo.gs/) and posts a clickable + copyable link in chat, so staff can quickly
-  work out why your pack didn't load.
+* Allows the Crown Championship server to play videos during events, including game intros, trailers, announcements, and lobby content.
+
+### 🧾 Resource-pack failure reporter
+
+* If the Crown Championship resource pack fails to apply, the mod uploads the relevant section of your log to mclo.gs.
+* A clickable and copyable link is then posted in chat, allowing staff to quickly determine why the resource pack failed to load.
 
 ---
 
 ## 📦 Requirements
 
-| Dependency | Version | Notes |
-|---|---|---|
-| **Fabric Loader** | ≥ 0.16.0 | |
-| **Fabric API** | for 1.21.11 | Required |
-| **Java** | 21+ | |
-| **WaterMedia** | 2.1.37 | **Optional** — only needed for the video/radio features. Without it the mod still loads and the kill feed works; video just stays disabled. |
-
-`java-youtube-downloader` is bundled inside the mod jar, so there's nothing extra to download.
-
-> If you only want the kill feed, you can skip WaterMedia entirely. Install it (2.1.37) only if you
-> want in‑world video/radio playback.
+| Dependency        |               Version | Notes    |
+| ----------------- | --------------------: | -------- |
+| **Fabric Loader** |              ≥ 0.16.0 | Required |
+| **Fabric API**    | For Minecraft 1.21.11 | Required |
 
 ---
 
 ## 🚀 Installation
 
 1. Install **Fabric Loader** for Minecraft 1.21.11.
-2. Download **Fabric API** (required). Optionally also grab **WaterMedia 2.1.37** if you want the
-   video/radio features.
-3. Drop those jars **plus this mod's jar** into your `mods` folder.
-4. Launch the game and join the Crown Championship server — accept the server resource pack when
-   prompted (the kill feed fonts and icons come from it).
+2. Download **Fabric API** for Minecraft 1.21.11.
+3. Place both the Fabric API jar and the Crown Core jar inside your Minecraft `mods` folder.
+4. Launch the game and join the Crown Championship server.
+5. Accept the server resource pack when prompted. The kill feed fonts, icons, and other assets are provided through the resource pack.
 
 ---
 
 ## 🎮 Commands
 
-The only command you'll use as a player:
+The primary player command is:
 
+```text
+/killfeed side
 ```
-/killfeed side    # flip the kill feed to the left or right edge of your screen
-```
 
-Everything else (whether the feed shows, which videos play) is handled by the Crown Championship
-server.
+This moves the kill feed between the left and right sides of your screen.
 
-### Video controls (when a video allows them)
-| Action | Keys |
-|---|---|
-| Close video | `Shift` + `Esc` |
-| Forward / Backward | `Shift` + `→` / `Shift` + `←` |
-| Pause | `Shift` + `Space` |
-| Mute | `M` |
-| Volume up / down | `↑` / `↓` |
+Everything else, including kill feed visibility and video playback, is controlled by the Crown Championship server.
 
 ---
 
 ## ❓ FAQ
 
-**The kill feed icons / player heads don't show.**
-Make sure you accepted the Crown Championship resource pack — the kill‑method fonts and name fonts
-are supplied by it. Heads and team colours only appear for players currently online.
+### The kill feed icons or player heads do not appear.
 
-**Can I use this on other servers?**
-This mod is built specifically for the Crown Championship server. The kill feed relies on the
-server's death messages, resource pack, and companion plugin, so it won't do anything meaningful
-elsewhere.
+Make sure you accepted the Crown Championship resource pack. The kill-method icons and custom fonts are supplied by it.
+
+Player heads and team colours may only appear correctly for players who are currently online and participating in the event.
+
+### Can I use this mod on other servers?
+
+Crown Core is built specifically for the Crown Championship server. Features such as the kill feed, video system, and resource-pack integration rely on the server's companion plugin and infrastructure, so the mod will not do anything meaningful on most other servers.
 
 ---
 
-## 🙏 Credits & license
+## 🙏 Credits and license
 
-- Author: **cbop**
-- Video/audio backend: **WaterMedia** by the WaterMedia Team.
-- Kill feed look inspired by the Trident mod, reimplemented for vanilla `GuiGraphics`.
+* Original **Video Player** mod by **NGoedix**: https://github.com/NGoedix/WatchVideoMod
+* Kill feed design inspired by the **[Trident](https://modrinth.com/mod/trident-mcci)** mod and reimplemented using vanilla `GuiGraphics`
 
-Released under **CC0‑1.0**.
+---
+
+## ⚠️ Development notice
+
+Some features in this mod were created with the assistance of AI while I continue learning Java. The code is still reviewed, tested, and maintained for use on the Crown Championship server.
+
+Released under the **CC0-1.0** license.
