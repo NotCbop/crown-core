@@ -71,6 +71,9 @@ public class ClientHandler implements ClientModInitializer {
         KillFeedChatListener.register();
         KillFeedCommand.register();
 
+        VideoToggle.load();
+        VideoCommand.register();
+
         PackFailureReporter.register();
 
         if (VideoPlayerUtils.hasWaterMedia()) {
@@ -84,14 +87,14 @@ public class ClientHandler implements ClientModInitializer {
     }
 
     public static void openVideo(Minecraft client, String url, int volume, boolean isControlBlocked, boolean canSkip) {
-        if (!VideoPlayerUtils.hasWaterMedia()) return;
+        if (!VideoPlayerUtils.hasWaterMedia() || !VideoToggle.isEnabled()) return;
         client.execute(() -> {
             Minecraft.getInstance().setScreen(new VideoScreen(url, volume, isControlBlocked, canSkip, false));
         });
     }
 
     public static void openVideo(Minecraft client, String url, int volume, boolean isControlBlocked, boolean canSkip, int optionInMode, int optionInSecs, int optionOutMode, int optionOutSecs) {
-        if (!VideoPlayerUtils.hasWaterMedia()) return;
+        if (!VideoPlayerUtils.hasWaterMedia() || !VideoToggle.isEnabled()) return;
         client.execute(() -> {
             Minecraft.getInstance().setScreen(new VideoScreen(url, volume, isControlBlocked, canSkip, optionInMode, optionInSecs, optionOutMode, optionOutSecs));
         });
