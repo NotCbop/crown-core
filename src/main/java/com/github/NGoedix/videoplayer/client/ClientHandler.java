@@ -72,6 +72,10 @@ public class ClientHandler implements ClientModInitializer {
         KillFeedChatListener.register();
         KillFeedCommand.register();
 
+        // /video on|off client toggle for hiding videos
+        VideoToggle.load();
+        VideoCommand.register();
+
         // Resource-pack failure -> mclo.gs link in chat
         PackFailureReporter.register();
 
@@ -88,7 +92,7 @@ public class ClientHandler implements ClientModInitializer {
     }
 
     public static void openVideo(Minecraft client, String url, int volume, boolean isControlBlocked, boolean canSkip) {
-        if (!VideoPlayerUtils.hasWaterMedia()) return;
+        if (!VideoPlayerUtils.hasWaterMedia() || !VideoToggle.isEnabled()) return;
         client.execute(() -> {
             closeExistingVideoScreen(client);
             Minecraft.getInstance().setScreen(new VideoScreen(url, volume, isControlBlocked, canSkip, false));
@@ -96,7 +100,7 @@ public class ClientHandler implements ClientModInitializer {
     }
 
     public static void openVideo(Minecraft client, String url, int volume, boolean isControlBlocked, boolean canSkip, int optionInMode, int optionInSecs, int optionOutMode, int optionOutSecs) {
-        if (!VideoPlayerUtils.hasWaterMedia()) return;
+        if (!VideoPlayerUtils.hasWaterMedia() || !VideoToggle.isEnabled()) return;
         client.execute(() -> {
             closeExistingVideoScreen(client);
             Minecraft.getInstance().setScreen(new VideoScreen(url, volume, isControlBlocked, canSkip, optionInMode, optionInSecs, optionOutMode, optionOutSecs));
