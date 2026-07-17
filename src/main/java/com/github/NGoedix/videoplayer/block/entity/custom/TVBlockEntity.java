@@ -34,16 +34,19 @@ public class TVBlockEntity extends VideoPlayerBlockEntity {
     }
 
     public void tryOpen(Level level, BlockPos blockPos, Player player) {
+        // If none is using the block, open the GUI
         if (playerUsing == null) {
             setBeingUsed(player.getUUID());
             openVideoManagerGUI(blockPos, player);
             return;
         }
 
+        // If the player that use the block is connected, don't open the GUI
         for (Player p : level.players())
             if (p.getUUID() == playerUsing)
                 return;
 
+        // Open the GUI
         openVideoManagerGUI(blockPos, player);
     }
 

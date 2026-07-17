@@ -22,6 +22,7 @@ import net.minecraft.world.level.storage.ValueOutput;
 
 public abstract class VideoPlayerBlockEntity extends BlockEntity {
 
+    // VIDEO / MUSIC  PROPERTIES
     private String url = "";
     private boolean playing = false;
     private boolean stopped = false;
@@ -94,6 +95,8 @@ public abstract class VideoPlayerBlockEntity extends BlockEntity {
     }
 
     public IDisplay requestDisplay() {
+        // WaterMedia is optional; with it absent there is no backend to decode/show anything, so never
+        // touch the displayer/cache classes (which reference WaterMedia) from ticking or rendering.
         if (!VideoPlayerUtils.hasWaterMedia()) return null;
         String url = getUrl();
         if (isURLEmpty()) return null;

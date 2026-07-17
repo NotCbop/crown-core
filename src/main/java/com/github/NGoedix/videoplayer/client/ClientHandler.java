@@ -66,16 +66,17 @@ public class ClientHandler implements ClientModInitializer {
 
         PacketHandler.registerS2CPackets();
 
+        // Kill feed (Crown Championship Utilities) — works with or without WaterMedia.
         KillFeedAssets.register();
         KillFeed.register();
         KillFeedChatListener.register();
         KillFeedCommand.register();
 
-        VideoToggle.load();
-        VideoCommand.register();
-
+        // Resource-pack failure -> mclo.gs link in chat
         PackFailureReporter.register();
 
+        // Video/radio playback needs WaterMedia, which is an optional dependency. Only wire those parts
+        // up when it's installed; everything above keeps working without it.
         if (VideoPlayerUtils.hasWaterMedia()) {
             BlockEntityRendererRegistry.register(ModBlockEntities.TV_BLOCK_ENTITY, TVBlockRenderer::new);
             IMG_PAUSED = ImageAPI.renderer("/pictures/paused.png", ClientHandler.class.getClassLoader(), true);
@@ -87,14 +88,14 @@ public class ClientHandler implements ClientModInitializer {
     }
 
     public static void openVideo(Minecraft client, String url, int volume, boolean isControlBlocked, boolean canSkip) {
-        if (!VideoPlayerUtils.hasWaterMedia() || !VideoToggle.isEnabled()) return;
+        if (!VideoPlayerUtils.hasWaterMedia()) return;
         client.execute(() -> {
             Minecraft.getInstance().setScreen(new VideoScreen(url, volume, isControlBlocked, canSkip, false));
         });
     }
 
     public static void openVideo(Minecraft client, String url, int volume, boolean isControlBlocked, boolean canSkip, int optionInMode, int optionInSecs, int optionOutMode, int optionOutSecs) {
-        if (!VideoPlayerUtils.hasWaterMedia() || !VideoToggle.isEnabled()) return;
+        if (!VideoPlayerUtils.hasWaterMedia()) return;
         client.execute(() -> {
             Minecraft.getInstance().setScreen(new VideoScreen(url, volume, isControlBlocked, canSkip, optionInMode, optionInSecs, optionOutMode, optionOutSecs));
         });
@@ -126,6 +127,7 @@ public class ClientHandler implements ClientModInitializer {
     public static void playMusic(Minecraft client, String url, int volume) {
         if (!VideoPlayerUtils.hasWaterMedia()) return;
         client.execute(() -> {
+            // Until any callback in MusicPlayer I will check if the music is playing when added other music player
             for (MusicPlayer musicPlayer : musicPlayers) {
                 if (musicPlayer.isPlaying()) {
                     musicPlayer.stop();
@@ -134,6 +136,7 @@ public class ClientHandler implements ClientModInitializer {
                 }
             }
 
+            // Add the new player
             MusicPlayer musicPlayer = new MusicPlayer();
             musicPlayers.add(musicPlayer);
             musicPlayer.setVolume(volume);

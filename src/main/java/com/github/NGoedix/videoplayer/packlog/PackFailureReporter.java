@@ -23,11 +23,23 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+/**
+ * When the client tells the server that a server-sent resource pack failed to download or load, this
+ * uploads the tail of {@code logs/latest.log} to mclo.gs and drops a clickable / copyable link into
+ * the player's chat so the failure can be diagnosed.
+ *
+ * <p>Triggered from {@code ServerboundResourcePackPacketMixin}. Pack negotiation can happen during
+ * the configuration phase (before the player is in-world and chat exists), so finished messages are
+ * queued and flushed on the client tick once a chat is available.
+ */
 public final class PackFailureReporter {
 
+    /** Master switch; set to {@code false} to disable log uploads entirely. */
     public static boolean enabled = true;
 
+    /** Don't re-upload for the same pack id within this window. */
     private static final long DEDUPE_MILLIS = 30_000L;
+    /** Tail of latest.log to upload — enough for the failure context, well under mclo.gs limits. */
     private static final long MAX_LOG_BYTES = 1_000_000L;
 
     private static final Map<UUID, Long> RECENT = new ConcurrentHashMap<>();
@@ -39,6 +51,7 @@ public final class PackFailureReporter {
         ClientTickEvents.END_CLIENT_TICK.register(PackFailureReporter::drain);
     }
 
+    /** Called for every resource-pack status the client reports; only failures do anything. */
     public static void onStatus(UUID id, ServerboundResourcePackPacket.Action action) {
         if (!enabled) return;
 
@@ -81,6 +94,7 @@ public final class PackFailureReporter {
             channel.position(start);
             ByteBuffer buffer = ByteBuffer.allocate((int) (size - start));
             while (buffer.hasRemaining() && channel.read(buffer) != -1) {
+                // keep reading
             }
             buffer.flip();
             String text = StandardCharsets.UTF_8.decode(buffer).toString();

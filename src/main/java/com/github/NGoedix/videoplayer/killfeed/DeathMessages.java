@@ -2,7 +2,14 @@ package com.github.NGoedix.videoplayer.killfeed;
 
 import java.util.regex.Pattern;
 
+/**
+ * Death-message patterns for the server's killfeed skript. Every message is prefixed with
+ * {@code [💀] } (a skull in brackets) followed by {@code <victim> <verb> [by <attacker>].}.
+ * Group 1 is the victim, group 2 (when present) is the attacker. Attacker patterns are listed first
+ * so the more specific phrasing wins.
+ */
 public enum DeathMessages {
+    // --- With an attacker ---
     ATTACK("(.+?) was slain by (.+?)\\.$", KillMethod.MELEE),
     SHOT_BY("(.+?) was shot by (.+?)\\.$", KillMethod.RANGE),
     IMPALED("(.+?) was impaled by (.+?)\\.$", KillMethod.RANGE),
@@ -20,6 +27,7 @@ public enum DeathMessages {
     SPLEEFED_BY("(.+?) was spleefed by (.+?)\\.$", KillMethod.MELEE),
     DIED_ESCAPE("(.+?) died while trying to escape (.+?)\\.$", KillMethod.GENERIC),
 
+    // --- Self / environmental ---
     FALL("(.+?) fell from a high place\\.$", KillMethod.GENERIC),
     DROWN("(.+?) drowned\\.$", KillMethod.GENERIC),
     VOID("(.+?) fell out of the world\\.$", KillMethod.VOID),
@@ -34,12 +42,19 @@ public enum DeathMessages {
     SHOT("(.+?) was shot\\.$", KillMethod.RANGE),
     DIED("(.+?) died\\.$", KillMethod.GENERIC);
 
+    /**
+     * Shared chat prefix: {@code [skull] }. Optional, because the same patterns also match the plain
+     * vanilla death text the CrownChampionshipUtils plugin broadcasts to other players (which carries
+     * neither the skript's skull prefix nor its trailing period). Compile-time constant.
+     */
     private static final String PREFIX = "^(?:\\[\\x{1F480}\\] )?";
 
     public final Pattern pattern;
     public final KillMethod method;
 
     DeathMessages(String body, KillMethod method) {
+        // Relax the trailing period to optional (vanilla messages have none, the skript adds one) so a
+        // single pattern matches both the victim's chat line and the plugin's broadcast of the same kill.
         String relaxed = body.endsWith("\\.$") ? body.substring(0, body.length() - 3) + "\\.?$" : body;
         this.pattern = Pattern.compile(PREFIX + relaxed);
         this.method = method;

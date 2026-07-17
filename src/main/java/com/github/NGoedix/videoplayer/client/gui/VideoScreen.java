@@ -37,6 +37,7 @@ public class VideoScreen extends AbstractContainerScreen<AbstractContainerMenu> 
         FORMAT.setTimeZone(TimeZone.getTimeZone("GMT-00:00"));
     }
 
+    // STATUS
     private int tick = 0;
     private int closingOnTick = -1;
     private float fadeLevel = 0;
@@ -46,6 +47,7 @@ public class VideoScreen extends AbstractContainerScreen<AbstractContainerMenu> 
     private boolean closing = false;
     private float volume;
 
+    // CONTROL
     private final boolean controlBlocked;
     private final boolean canSkip;
     private int optionInMode;
@@ -53,8 +55,10 @@ public class VideoScreen extends AbstractContainerScreen<AbstractContainerMenu> 
     private int optionOutMode;
     private int optionOutSecs;
 
+    // TOOLS
     private final VideoPlayer player;
 
+    // VIDEO INFO
     int videoTexture = -1;
 
     public VideoScreen(String url, int volume, boolean controlBlocked, boolean canSkip, int optionInMode, int optionInSecs, int optionOutMode, int optionOutSecs) {
@@ -100,6 +104,7 @@ public class VideoScreen extends AbstractContainerScreen<AbstractContainerMenu> 
             videoTexture = player.texture();
         }
 
+        // Handle easing for fade-in
         if ((tick < optionInSecs * 20 && optionInMode != -1) || !started) {
             float t = tick / (float) (optionInSecs * 20);
             fadeLevel = (float) applyEasing(optionInMode, 0, 1, t);
@@ -110,6 +115,7 @@ public class VideoScreen extends AbstractContainerScreen<AbstractContainerMenu> 
             }
         }
 
+        // Handle easing for fade-out
         if (closing || player.isEnded() || player.isBroken()) {
             if (optionOutMode == -1) {
                 onClose();
@@ -125,6 +131,7 @@ public class VideoScreen extends AbstractContainerScreen<AbstractContainerMenu> 
             }
         }
 
+        // BLACK SCREEN
         if (!player.isPaused() || optionInMode != -1 || optionOutMode != -1)
             renderBlackBackground(guiGraphics);
 
@@ -132,13 +139,16 @@ public class VideoScreen extends AbstractContainerScreen<AbstractContainerMenu> 
 
         boolean playingState = (player.isPlaying() || player.isPaused());
 
+        // RENDER VIDEO
         if (playingState || player.isStopped() || player.isEnded()) {
             renderTexture(guiGraphics, videoTexture);
         }
 
+        // BLACK SCREEN
         if (!player.isPaused())
             renderBlackBackground(guiGraphics);
 
+        // RENDER GIF
         if (!player.isPlaying()) {
             if (player.isPaused()) {
                 renderIcon(guiGraphics, ClientHandler.pausedImage());
@@ -147,9 +157,11 @@ public class VideoScreen extends AbstractContainerScreen<AbstractContainerMenu> 
             }
         }
 
+        // Render icons 10 and -5 seconds
         renderStepIcon(guiGraphics, pPartialTick, true);
         renderStepIcon(guiGraphics, pPartialTick, false);
 
+        // DEBUG RENDERING
         if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
             draw(guiGraphics, String.format("State: %s", player.getStateName()), getHeightCenter(-12));
             draw(guiGraphics, String.format("Time: %s (%s) / %s (%s)", FORMAT.format(new Date(player.getTime())), player.getTime(), FORMAT.format(new Date(player.getDuration())), player.getDuration()), getHeightCenter(0));
@@ -159,8 +171,9 @@ public class VideoScreen extends AbstractContainerScreen<AbstractContainerMenu> 
 
     private void renderTexture(GuiGraphics guiGraphics, int texture) {
         Dimension videoDimensions = player.dimension();
-        if (videoDimensions == null) return;
+        if (videoDimensions == null) return; // Checking if video available
 
+        // Stretch the video to fill the entire screen edge-to-edge (no black bars).
         drawTexture(guiGraphics, texture, (int) videoDimensions.getWidth(), (int) videoDimensions.getHeight(), 0, 0, width, height, 0xFFFFFFFF);
     }
 
@@ -215,14 +228,12 @@ public class VideoScreen extends AbstractContainerScreen<AbstractContainerMenu> 
         int pKeyCode = event.key();
         boolean shift = (event.modifiers() & GLFW.GLFW_MOD_SHIFT) != 0;
 
-        if (Minecraft.getInstance().options.keyInventory.matches(event)) {
-            return true;
-        }
-
+        // Shift + ESC (Exit)
         if (canSkip && shift && pKeyCode == 256) {
             this.onClose();
         }
 
+        // Up arrow key (Volume)
         if (pKeyCode == 265) {
             if (volume <= 120) {
                 volume += 5;
@@ -238,6 +249,7 @@ public class VideoScreen extends AbstractContainerScreen<AbstractContainerMenu> 
             player.setVolume((int) newVolume);
         }
 
+        // Down arrow key (Volume)
         if (pKeyCode == 264) {
             if (volume >= 5) {
                 volume -= 5;
@@ -250,6 +262,7 @@ public class VideoScreen extends AbstractContainerScreen<AbstractContainerMenu> 
             player.setVolume((int) newVolume);
         }
 
+        // M to mute
         if (pKeyCode == 77) {
             if (player.isMuted()) {
                 player.unmute();
@@ -258,18 +271,22 @@ public class VideoScreen extends AbstractContainerScreen<AbstractContainerMenu> 
             }
         }
 
+        // If control blocked can't modify the video time
         if (controlBlocked) return super.keyPressed(event);
 
+        // Shift + Right arrow key (Forwards)
         if (shift && pKeyCode == 262) {
             player.seekTo(player.getTime() + 10000);
             fadeStep10 = 1;
         }
 
+        // Shift + Left arrow key (Backwards)
         if (shift && pKeyCode == 263) {
             player.seekTo(player.getTime() - 5000);
             fadeStep5 = 1;
         }
 
+        // Shift + Space (Pause / Play)
         if (shift && pKeyCode == 32) {
             player.togglePlayback();
         }

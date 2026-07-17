@@ -99,6 +99,7 @@ public class TVBlockRenderer implements BlockEntityRenderer<TVBlockEntity, TVBlo
         Facing facing = Facing.get(d);
         AlignedBox box = frame.getBox();
 
+        // BEGIN ASPECT RATIO
         if (aspectRatio) {
             float videoAspectRatio = 1.0f;
             if (display != null) {
@@ -141,6 +142,7 @@ public class TVBlockRenderer implements BlockEntityRenderer<TVBlockEntity, TVBlo
                 }
             }
         }
+        // END ASPECT RATIO
 
         float offset = aspectRatio ? 0.001f : 0;
 

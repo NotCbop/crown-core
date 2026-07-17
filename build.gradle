@@ -36,14 +36,8 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-	// WaterMedia provides the multimedia (VLC) backend.
-	// `implementation` is the compile classpath; `include` bundles WaterMedia into our jar via
-	// Fabric jar-in-jar so players install a single mod (used with the owner's permission — its
-	// PolyForm Strict license otherwise forbids redistribution). WaterMedia ships as a finished
-	// multiloader mod jar (its own fabric.mod.json, shaded deps, no Minecraft-mapped refs), so it
-	// is nested as-is with no remapping.
+	// WaterMedia provides the multimedia (VLC) backend. Installed as a separate mod at runtime.
 	implementation 'com.github.WaterMediaTeam:watermedia:2.1.37'
-	include 'com.github.WaterMediaTeam:watermedia:2.1.37'
 
 	// YouTube link resolution (WaterMedia 2.1.x dropped its YouTube extractor).
 	// Embedded directly into the mod jar (see the jar task below) so players need no extra download.

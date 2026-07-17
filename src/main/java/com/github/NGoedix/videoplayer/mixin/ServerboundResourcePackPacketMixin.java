@@ -9,6 +9,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.UUID;
 
+/**
+ * Hooks the packet the client sends to report a resource-pack status. The canonical
+ * {@code (UUID, Action)} constructor is built only when the client reports a status to the server,
+ * so it is a clean place to catch download / load failures without touching the async download
+ * internals. Decoding incoming packets uses the other constructor, so this never fires on receive.
+ */
 @Mixin(ServerboundResourcePackPacket.class)
 public class ServerboundResourcePackPacketMixin {
 

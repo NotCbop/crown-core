@@ -19,7 +19,9 @@ import java.util.UUID;
 
 public class PacketHandler {
 
+    // Registers all payload codecs (must run on both sides) and the C2S receivers (server).
     public static void registerC2SPackets() {
+        // Payload type + codec registration (common)
         PayloadTypeRegistry.playC2S().register(VideoUpdateMessage.TYPE, VideoUpdateMessage.CODEC);
         PayloadTypeRegistry.playC2S().register(RadioUpdateMessage.TYPE, RadioUpdateMessage.CODEC);
 
@@ -32,6 +34,7 @@ public class PacketHandler {
         PayloadTypeRegistry.playS2C().register(SendMusicMessage.TYPE, SendMusicMessage.CODEC);
         PayloadTypeRegistry.playS2C().register(PlayBroadcastMessage.TYPE, PlayBroadcastMessage.CODEC);
 
+        // C2S receivers (server)
         ServerPlayNetworking.registerGlobalReceiver(VideoUpdateMessage.TYPE, (payload, context) -> {
             ServerPlayer player = context.player();
             context.server().execute(() -> {
@@ -71,6 +74,7 @@ public class PacketHandler {
         });
     }
 
+    // S2C receivers (client only)
     public static void registerS2CPackets() {
         ClientPlayNetworking.registerGlobalReceiver(FrameVideoMessage.TYPE, (payload, context) ->
                 ClientHandler.manageVideo(context.client(), payload.url(), payload.pos(), payload.playing(), payload.tick()));
@@ -108,6 +112,7 @@ public class PacketHandler {
                 ClientHandler.stopMusicIfPlaying(context.client());
         });
 
+        // Simple plain-string channel for non-mod servers (Paper plugins, Skript, etc.).
         ClientPlayNetworking.registerGlobalReceiver(PlayBroadcastMessage.TYPE, (payload, context) -> {
             String body = payload.body().trim();
             if (body.isEmpty()) return;
@@ -117,6 +122,7 @@ public class PacketHandler {
                 return;
             }
 
+            // "killfeed on|off" — server-side control of the kill feed (e.g. hide it for non-PvP games).
             if (body.regionMatches(true, 0, "killfeed", 0, "killfeed".length())) {
                 String[] kf = body.split("\\s+");
                 boolean on = kf.length < 2 || parseOnOff(kf[1]);
@@ -124,41 +130,12 @@ public class PacketHandler {
                 return;
             }
 
+            // "killmsg <death message>" — the plugin relays each kill to every modded player so the feed
+            // shows for everyone, not just the victim whose chat the server messaged. Same parser path.
             if (body.regionMatches(true, 0, "killmsg ", 0, "killmsg ".length())) {
                 if (!KillFeed.enabled) return;
                 String deathText = body.substring("killmsg ".length());
                 context.client().execute(() -> KillFeedChatListener.handleText(deathText));
-                return;
-            }
-
-            if (body.equalsIgnoreCase("stopmusic")) {
-                ClientHandler.stopMusicIfPlaying(context.client());
-                return;
-            }
-
-            if (body.regionMatches(true, 0, "music;", 0, "music;".length())) {
-                String[] m = body.split(";");
-                String mUrl = m.length > 1 ? m[1].trim() : "";
-                int mVol = m.length > 2 ? parseIntOrDefault(m[2].trim(), 100) : 100;
-                if (!mUrl.isEmpty())
-                    ClientHandler.playMusic(context.client(), mUrl, mVol);
-                return;
-            }
-
-            if (body.regionMatches(true, 0, "govideo;", 0, "govideo;".length())) {
-                String[] p = body.split(";");
-                String gUrl = p.length > 1 ? p[1].trim() : "";
-                if (gUrl.isEmpty()) return;
-                int gVol = p.length > 2 ? parseIntOrDefault(p[2].trim(), 100) : 100;
-                boolean gBlocked = p.length > 3 && Boolean.parseBoolean(p[3].trim());
-                boolean gSkip = p.length <= 4 || Boolean.parseBoolean(p[4].trim());
-                int gMode = p.length > 5 ? parseIntRaw(p[5].trim(), 0) : 0;
-                int optInMode = p.length > 7 ? parseIntRaw(p[7].trim(), -1) : -1;
-                int optInSecs = p.length > 8 ? parseIntRaw(p[8].trim(), -1) : -1;
-                int optOutMode = p.length > 9 ? parseIntRaw(p[9].trim(), -1) : -1;
-                int optOutSecs = p.length > 10 ? parseIntRaw(p[10].trim(), -1) : -1;
-                if (gMode == 0)
-                    ClientHandler.openVideo(context.client(), gUrl, gVol, gBlocked, gSkip, optInMode, optInSecs, optOutMode, optOutSecs);
                 return;
             }
 
@@ -172,6 +149,7 @@ public class PacketHandler {
         });
     }
 
+    /** Reads an on/off-style token; anything other than an explicit "off"/"false"/"disable"/"0" is on. */
     private static boolean parseOnOff(String value) {
         switch (value.toLowerCase()) {
             case "off":
@@ -194,14 +172,7 @@ public class PacketHandler {
         }
     }
 
-    private static int parseIntRaw(String value, int fallback) {
-        try {
-            return Integer.parseInt(value);
-        } catch (NumberFormatException e) {
-            return fallback;
-        }
-    }
-
+    // SEND MESSAGES S2C
     public static void sendS2CSendVideoStart(ServerPlayer player, String url, int volume, boolean controlBlocked, boolean canSkip) {
         ServerPlayNetworking.send(player, new SendVideoMessage(SendVideoMessage.VideoMessageType.START, url, volume, controlBlocked, canSkip));
     }

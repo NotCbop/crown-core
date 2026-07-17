@@ -1,5 +1,6 @@
 package com.github.NGoedix.videoplayer.util.math.geo;
 
+
 public class Vec3f extends VecNf<Vec3f> {
     public float x;
     public float y;

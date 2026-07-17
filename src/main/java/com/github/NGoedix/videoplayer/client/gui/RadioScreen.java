@@ -23,6 +23,7 @@ import java.util.Map;
 
 public class RadioScreen extends Screen {
 
+    // Textures
     private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(Reference.MOD_ID, "textures/gui/background.png");
 
     private static final Identifier PLAY_BUTTON_TEXTURE = Identifier.fromNamespaceAndPath(Reference.MOD_ID, "textures/gui/play_button.png");
@@ -37,12 +38,14 @@ public class RadioScreen extends Screen {
     private ImageButtonHoverable playButton;
     private ImageButtonHoverable pauseButton;
 
+    // Control
     private final RadioBlockEntity be;
     private final ItemStack item;
     private String url;
     private int volume;
     private boolean ready = false;
 
+    // GUI
     private final int imageWidth = 256;
     private final int imageHeight = 256;
     private int leftPos;
@@ -63,6 +66,8 @@ public class RadioScreen extends Screen {
         this.be = null;
         this.item = item;
 
+//        this.url = HandRadioItem.getUrl(item);
+//        this.volume = HandRadioItem.getVolume(item);
     }
 
     @Override
@@ -85,6 +90,7 @@ public class RadioScreen extends Screen {
         });
         countryList.setSelected(getCountryFromStationUrl(url));
 
+        // Expresión regular para validar una URL
         String urlPattern = "(http|https)://(www\\.)?([\\w]+\\.)+[\\w]{2,63}/?[\\w\\-\\?\\=\\&\\%\\.\\/]*/?";
 
         addRenderableWidget(urlField = new EditBox(font, leftPos + 12, height / 2 - 30, imageWidth - 28, 20, Component.literal("")));
@@ -111,18 +117,22 @@ public class RadioScreen extends Screen {
         stationList.setSelected(getStationFromStationUrl(url));
         stationList.updateEntries(getStationNamesForCountry(countryList.getSelectedText(), RadioStreams.getRadioStreams()));
 
+        // Volume slider
         addRenderableWidget(volumeSlider = new CustomSlider(leftPos + 10, height / 2 - 5, imageWidth - 24, 20, Component.translatable("gui.tv_video_screen.volume"), volume / 100f, false));
         volumeSlider.setOnSlideListener(value -> {
             if (!ready) return;
 
             if (be != null)
                 be.setVolume((int) value);
+//            else
+//                HandRadioItem.setVolume(item, (int) value);
             volume = (int) volumeSlider.getValue();
 
             sendUpdate(urlField.getValue(), volume, pauseButton.visible, -1, false);
         });
         volumeSlider.setValue(volume / 100f);
 
+        // Buttons
         addRenderableWidget(playButton = new ImageButtonHoverable(width / 2 - 10, topPos + 150, 20, 20, 0, 0, 0, PLAY_BUTTON_TEXTURE, PLAY_HOVER_BUTTON_TEXTURE, 20, 20, button -> {
             if (!ready) return;
 
@@ -135,6 +145,8 @@ public class RadioScreen extends Screen {
                     if (be.requestDisplay() == null) return;
                     be.requestDisplay().resume(be.getTick());
                 } else {
+//                    if (HandRadioItem.requestDisplay(item) == null) return;
+//                    HandRadioItem.requestDisplay(item).resume(-1);
                 }
 
                 sendUpdate(urlField.getValue(), volume, true, 0, false);
@@ -154,6 +166,8 @@ public class RadioScreen extends Screen {
                     if (be.requestDisplay() == null) return;
                     be.requestDisplay().pause(be.getTick());
                 } else {
+//                    if (HandRadioItem.requestDisplay(item) == null) return;
+//                    HandRadioItem.requestDisplay(item).pause(-1);
                 }
                 sendUpdate(urlField.getValue(), volume, false, 0, false);
             }
@@ -234,6 +248,7 @@ public class RadioScreen extends Screen {
         if (be != null) {
             PacketHandler.sendC2SRadioUpdateMessage(be.getBlockPos(), url, volume, tick == -1 ? -1 : be.getTick(), isPlaying, exit);
         } else {
+//            PacketHandler.sendToServer(new UploadRadioUpdateMessage(item, url, volume, -1, isPlaying, exit));
         }
     }
 

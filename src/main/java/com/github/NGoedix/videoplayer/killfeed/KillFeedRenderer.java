@@ -13,24 +13,34 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Draws the kill feed with plain vanilla {@code GuiGraphics}, reproducing Trident's look: rounded
+ * team-coloured pills (same fill geometry), the {@code trident:killfeed/left|right} chevron sprites
+ * tinted per side, the {@code mcc:hud} name font, inline player-head sprites, the kill-method glyph
+ * and streak badges. Each side is built as a single component (head + name [+ icon]) and drawn once,
+ * exactly like Trident's {@code KillBackground}.
+ */
 public final class KillFeedRenderer {
 
     private static final int BAR_H = 15;
     private static final int PAD = 4;
-    private static final int RIGHT_PAD_LEFT = 2;
+    private static final int RIGHT_PAD_LEFT = 2; // attacker / environmental inner-right padding
     private static final int CHEVRON_W = 8;
     private static final int ENTRY_GAP = 2;
     private static final int BADGE_W = 15;
     private static final int TEXT_TOP = 3;
 
+    // Kill-streak fire (Trident's rampage_fire), shown instead of a numbered badge above 5 kills.
     private static final int FIRE_TEX_W = 22;
     private static final int FIRE_TEX_H = 10;
-    private static final int FIRE_FRAMES = 60;
-    private static final long FIRE_FRAME_MS = 100L;
+    private static final int FIRE_FRAMES = 60;        // 600px-tall strip / 10px per frame
+    private static final long FIRE_FRAME_MS = 100L;   // 2 ticks per frame
     private static final int FIRE_SLOT_W = FIRE_TEX_W + 2;
-    private static final int FIRE_STREAK_MIN = 6;
-    private static final int STREAK_BADGE_MIN = 2;
+    private static final int FIRE_STREAK_MIN = 6;     // streak above 5 -> fire
+    private static final int STREAK_BADGE_MIN = 2;    // streak 2..5 -> numbered badge
 
+    // Slide animation: each entry eases in from its screen edge over this duration, and eases back out
+    // the same way when it expires. Package-visible so KillFeed knows when the slide-out has finished.
     static final long SLIDE_MS = 250L;
 
     private static final Identifier CHEVRON_LEFT = KillFeedAssets.crown("killfeed/left");
@@ -67,6 +77,10 @@ public final class KillFeedRenderer {
         }
     }
 
+    /**
+     * How far the entry is currently pushed toward its screen edge. A fresh kill eases in from the edge
+     * to 0 (easeOutCubic); an expiring kill eases back out to fully off-edge (easeInCubic — the mirror).
+     */
     private static int slideOffset(KillEntry entry, long now, int width, int screenWidth, int baseX) {
         int distance = KillFeed.rightSide ? (screenWidth - baseX) : (baseX + width);
 
@@ -75,16 +89,18 @@ public final class KillFeedRenderer {
             if (elapsed <= 0) return 0;
             if (elapsed >= SLIDE_MS) return distance;
             float p = elapsed / (float) SLIDE_MS;
-            float eased = p * p * p;
+            float eased = p * p * p; // easeInCubic — accelerates back out toward the edge
             return Math.round(eased * distance);
         }
 
         long elapsed = now - entry.timestamp;
         if (elapsed >= SLIDE_MS || elapsed < 0) return 0;
         float p = elapsed / (float) SLIDE_MS;
-        float eased = 1f - (1f - p) * (1f - p) * (1f - p);
+        float eased = 1f - (1f - p) * (1f - p) * (1f - p); // easeOutCubic
         return Math.round((1f - eased) * distance);
     }
+
+    // --- Content components (head + name [+ method icon]) ---
 
     private static MutableComponent attackerContent(KillEntry entry, String self) {
         MutableComponent c = entry.attacker.head();
@@ -104,6 +120,8 @@ public final class KillFeedRenderer {
                 .withStyle(Style.EMPTY.withColor(0xFFFFFF));
     }
 
+    // --- Measuring ---
+
     private static int entryWidth(Font font, KillEntry entry, String self) {
         int width = 0;
         if (entry.attacker != null) {
@@ -117,6 +135,8 @@ public final class KillFeedRenderer {
         width += PAD + font.width(victimContent(entry, self)) + PAD;
         return width;
     }
+
+    // --- Drawing ---
 
     private static void renderEntry(GuiGraphics g, Font font, KillEntry entry, String self, int x, int y) {
         int attackerRgb = entry.attacker != null ? entry.attacker.color : 0x606060;
@@ -169,6 +189,7 @@ public final class KillFeedRenderer {
         g.blitSprite(RenderPipelines.GUI_TEXTURED, CHEVRON_RIGHT, x, y, CHEVRON_W, BAR_H, victimColor);
     }
 
+    /** Layout width reserved for the kill-streak indicator: 0 (none), a numbered badge, or the fire. */
     private static int streakSlotWidth(KillEntry entry) {
         if (entry.attacker == null) return 0;
         if (entry.streak >= FIRE_STREAK_MIN) return FIRE_SLOT_W;
@@ -180,13 +201,16 @@ public final class KillFeedRenderer {
         int by = y + BAR_H - 9;
         fillRoundedAll(g, x, by, 13, 9, color);
         int coerced = Math.max(1, Math.min(5, streak));
+        // Bundled in this mod under crown: (streak1..5, 13x9) — see assets/crown/textures/killfeed/streaks.
         Identifier tex = KillFeedAssets.crown("textures/killfeed/streaks/streak" + coerced + ".png");
         g.blit(RenderPipelines.GUI_TEXTURED, tex, x, by, 0.0F, 0.0F, 13, 9, 13, 9);
     }
 
+    /** Animated rampage fire (22x10), stepped through the 60-frame vertical strip by wall-clock time. */
     private static void drawFireBadge(GuiGraphics g, int x, int y) {
         int frame = (int) ((System.currentTimeMillis() / FIRE_FRAME_MS) % FIRE_FRAMES);
         float v = frame * FIRE_TEX_H;
+        // +2 nudges the flame toward the attacker pill so it sits right against the kill.
         g.blit(RenderPipelines.GUI_TEXTURED, FIRE_TEX, x + 2, y + 3, 0.0F, v,
                 FIRE_TEX_W, FIRE_TEX_H, FIRE_TEX_W, FIRE_TEX_H * FIRE_FRAMES);
     }
@@ -199,6 +223,7 @@ public final class KillFeedRenderer {
         g.drawString(minecraft.font, new PlayerRef(self).head(), x + 2, by + 1, 0xFFFFFFFF);
     }
 
+    // Rounded fills, matching Trident's GraphicsExtensions exactly.
     private static void fillRoundedLeft(GuiGraphics g, int x, int y, int w, int color) {
         g.fill(x, y + 1, x + 1, y + BAR_H - 1, color);
         g.fill(x + 1, y, x + w, y + BAR_H, color);

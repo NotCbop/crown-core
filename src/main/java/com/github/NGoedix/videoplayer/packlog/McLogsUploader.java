@@ -12,12 +12,18 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
+/**
+ * Uploads a log to <a href="https://api.mclo.gs/">mclo.gs</a> and returns the share URL. The service
+ * auto-scrubs IPs, access tokens and home paths, so it is safe to send a raw client log. Blocking;
+ * call it off the main thread.
+ */
 public final class McLogsUploader {
 
     private static final URI ENDPOINT = URI.create("https://api.mclo.gs/1/log");
 
     private McLogsUploader() {}
 
+    /** @return the share URL (e.g. {@code https://mclo.gs/abcd}); never {@code null} on success. */
     public static String upload(String content) throws IOException, InterruptedException {
         String body = "content=" + URLEncoder.encode(content, StandardCharsets.UTF_8);
 

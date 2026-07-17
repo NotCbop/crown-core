@@ -5,6 +5,11 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallba
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.network.chat.Component;
 
+/**
+ * Client-side {@code /killfeed} command. Players may only flip which side of the screen the feed
+ * sits on; everything else (whether the feed shows at all) is controlled by the server via the
+ * {@code crown:play} channel — see {@code PacketHandler} and the CrownChampionshipUtils plugin.
+ */
 public final class KillFeedCommand {
 
     private KillFeedCommand() {}

@@ -7,6 +7,10 @@ public class VideoPlayerUtils {
 
     private static Boolean waterMedia;
 
+    /**
+     * Whether WaterMedia is installed. It's an optional dependency: without it the video/radio
+     * features are disabled, but the kill feed and pack reporter still work. Cached after first call.
+     */
     public static boolean hasWaterMedia() {
         if (waterMedia == null) {
             waterMedia = FabricLoader.getInstance().isModLoaded("watermedia");

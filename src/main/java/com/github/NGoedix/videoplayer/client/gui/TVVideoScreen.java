@@ -48,11 +48,13 @@ public class TVVideoScreen extends Screen {
     private final int videoWidth = 200;
     private final int videoHeight = 150;
 
+    // GUI
     private final int imageWidth = 256;
     private final int imageHeight = 256;
     private int leftPos;
     private int topPos;
 
+    // Components useful for the GUI
     private EditBox urlBox;
     private CustomSlider volumeSlider;
 
@@ -101,6 +103,7 @@ public class TVVideoScreen extends Screen {
             }
         });
 
+        // Play button
         addRenderableWidget(playButton = new ImageButtonHoverable(leftPos + 10, topPos + 190, 20, 20, 0, 0, 0, PLAY_BUTTON_TEXTURE, PLAY_HOVER_BUTTON_TEXTURE, 20, 20, button -> {
             if (be.requestDisplay() != null && !url.isEmpty() && canClick) {
                 canClick = false;
@@ -113,6 +116,7 @@ public class TVVideoScreen extends Screen {
             }
         }));
 
+        // Pause button
         addRenderableWidget(pauseButton = new ImageButtonHoverable(leftPos + 10, topPos + 190, 20, 20, 0, 0, 0, PAUSE_BUTTON_TEXTURE, PAUSE_HOVER_BUTTON_TEXTURE, 20, 20, button -> {
             if (be.requestDisplay() != null && !url.isEmpty() && canClick) {
                 canClick = false;
@@ -127,6 +131,7 @@ public class TVVideoScreen extends Screen {
         playButton.visible = !be.isPlaying();
         pauseButton.visible = be.isPlaying();
 
+        // Stop button
         addRenderableWidget(stopButton = new ImageButtonHoverable(leftPos + 32, topPos + 190, 20, 20, 0, 0, 0, STOP_BUTTON_TEXTURE, STOP_HOVER_BUTTON_TEXTURE, 20, 20, button -> {
             if (be.requestDisplay() != null && !url.isEmpty()) {
                 playButton.visible = true;
@@ -139,6 +144,7 @@ public class TVVideoScreen extends Screen {
             }
         }));
 
+        // Time slider
         addRenderableWidget(timeSlider = new CustomSlider(leftPos + 54, topPos + 200, 187, 10, null, 0 / 100f, true));
         timeSlider.setOnSlideListener(value -> {
             if (be.requestDisplay() == null) return;
@@ -156,6 +162,7 @@ public class TVVideoScreen extends Screen {
             timeSlider.setValue((double) player.getTime() / player.getDuration());
         }
 
+        // Volume slider
         addRenderableWidget(volumeSlider = new CustomSlider(leftPos + 10, topPos + 215, imageWidth - 24, 20, Component.translatable("gui.tv_video_screen.volume"), volume / 100f, false));
         volumeSlider.setOnSlideListener(value -> {
             be.setVolume((int) value);
@@ -172,6 +179,7 @@ public class TVVideoScreen extends Screen {
         renderBackground(context, pMouseX, pMouseY, pPartialTick);
         context.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, leftPos, topPos, 0.0F, 0.0F, 320, 320, imageWidth, imageHeight, imageWidth, imageHeight);
 
+        // Draw black square behind the video
         drawTexture(context, ImageAPI.blackPicture().texture(0), leftPos + (imageWidth / 2) - (videoWidth / 2), topPos + 10, videoWidth, videoHeight);
 
         super.render(context, pMouseX, pMouseY, pPartialTick);
@@ -224,8 +232,9 @@ public class TVVideoScreen extends Screen {
 
         boolean playingState = be.requestDisplay().isPlaying();
 
+        // RENDER VIDEO
         if (playingState || be.requestDisplay().isStopped()) {
-            if (be.requestDisplay().getDimensions() == null) return;
+            if (be.requestDisplay().getDimensions() == null) return; // Checking if video available
 
             int textureId = be.requestDisplay().getRenderTexture();
 
@@ -233,10 +242,12 @@ public class TVVideoScreen extends Screen {
 
             guiGraphics.fill(leftPos + (imageWidth / 2) - (videoWidth / 2), topPos + 10, leftPos + (imageWidth / 2) - (videoWidth / 2) + videoWidth, topPos + 10 + videoHeight, MathAPI.argb(255, 0, 0, 0));
 
+            // Get video dimensions
             Dimension videoDimensions = be.requestDisplay().getDimensions();
             double nativeVideoWidth = videoDimensions.getWidth();
             double nativeVideoHeight = videoDimensions.getHeight();
 
+            // Calculate aspect ratios for both the screen and the video
             float screenAspectRatio = (float) videoWidth / videoHeight;
             float videoAspectRatio = (float) (nativeVideoWidth / nativeVideoHeight);
 

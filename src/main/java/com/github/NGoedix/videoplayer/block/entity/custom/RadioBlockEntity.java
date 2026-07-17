@@ -23,16 +23,19 @@ public class RadioBlockEntity extends VideoPlayerBlockEntity {
     }
 
     public void tryOpen(Level level, BlockPos blockPos, Player player) {
+        // If none is using the block, open the GUI
         if (playerUsing == null) {
             setBeingUsed(player.getUUID());
             openRadioManagerGUI(blockPos, player);
             return;
         }
 
+        // If the player that use the block is connected, don't open the GUI
         for (Player p : level.players())
             if (p.getUUID() == playerUsing)
                 return;
 
+        // Open the GUI
         openRadioManagerGUI(blockPos, player);
     }
 

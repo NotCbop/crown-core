@@ -12,6 +12,11 @@ import net.minecraft.resources.Identifier;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Bridges a raw OpenGL texture id (owned by WaterMedia's video/image decoders) into Minecraft's
+ * 1.21.5+ GpuTexture render pipeline by registering it as an {@link AbstractTexture} under a dynamic
+ * {@link Identifier}, which can then be drawn through {@code GuiGraphics.blit} or a {@code RenderType}.
+ */
 public final class VideoTextureManager {
 
     private static final Map<Integer, Identifier> CACHE = new HashMap<>();
@@ -41,6 +46,7 @@ public final class VideoTextureManager {
                 this.textureView.close();
                 this.textureView = null;
             }
+            // The underlying GL texture is owned by WaterMedia; do not delete it here.
         }
     }
 
@@ -51,6 +57,7 @@ public final class VideoTextureManager {
 
         @Override
         public void close() {
+            // WaterMedia owns and frees this GL texture; avoid double-free.
         }
     }
 }

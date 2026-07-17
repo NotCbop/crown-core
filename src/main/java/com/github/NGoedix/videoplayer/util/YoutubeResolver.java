@@ -13,6 +13,14 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Resolves YouTube watch/share/shorts URLs into a directly-playable stream URL.
+ *
+ * <p>WaterMedia 2.1.x dropped its bundled YouTube extractor, so VLC receives the raw youtube.com /
+ * youtu.be link and silently fails to open it. This helper uses java-youtube-downloader to turn a
+ * YouTube link into a concrete googlevideo stream URL (preferring a muxed video+audio format so VLC
+ * only has to open a single stream) before the player starts.</p>
+ */
 public final class YoutubeResolver {
 
     private static final YoutubeDownloader DOWNLOADER = new YoutubeDownloader();
@@ -34,6 +42,11 @@ public final class YoutubeResolver {
         return u.contains("youtube.com/") || u.contains("youtu.be/");
     }
 
+    /**
+     * Resolves {@code url} to a directly-playable stream and hands the result to {@code callback}.
+     * YouTube links are resolved on a background thread (network call); every other url is passed
+     * through immediately. On any failure the original url is used as a fallback.
+     */
     public static void resolve(String url, Consumer<URI> callback) {
         if (!isYoutube(url)) {
             callback.accept(NetworkAPI.parseURI(url));

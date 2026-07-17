@@ -25,12 +25,12 @@ public class PlayVideoCommand {
                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .then(Commands.argument("target", EntityArgument.players())
                         .then(Commands.argument("volume", IntegerArgumentType.integer(0, 100))
-                                .then(Commands.argument("url", SymbolStringArgumentType.symbolString())
-                                        .executes(e -> PlayVideoCommand.execute(e, false, false))
-                                        .then(Commands.argument("control_blocked", BoolArgumentType.bool())
+                                .then(Commands.argument("url", SymbolStringArgumentType.symbolString()) // Making url argument mandatory
+                                        .executes(e -> PlayVideoCommand.execute(e, false, false)) // This executes if blocked argument is not provided
+                                        .then(Commands.argument("control_blocked", BoolArgumentType.bool()) // Making blocked argument optional
                                                 .executes(e -> PlayVideoCommand.execute(e, true, false))
                                                 .then(Commands.argument("can_skip", BoolArgumentType.bool())
-                                                        .executes(e -> PlayVideoCommand.execute(e, true, true))))))));
+                                                        .executes(e -> PlayVideoCommand.execute(e, true, true)))))))); // This executes if blocked argument is provided
     }
 
     private static int execute(CommandContext<CommandSourceStack> command, boolean controlBlockedInCommand, boolean skipInCommand) {
