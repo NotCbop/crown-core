@@ -90,6 +90,7 @@ public class ClientHandler implements ClientModInitializer {
     public static void openVideo(Minecraft client, String url, int volume, boolean isControlBlocked, boolean canSkip) {
         if (!VideoPlayerUtils.hasWaterMedia()) return;
         client.execute(() -> {
+            closeExistingVideoScreen(client);
             Minecraft.getInstance().setScreen(new VideoScreen(url, volume, isControlBlocked, canSkip, false));
         });
     }
@@ -97,6 +98,7 @@ public class ClientHandler implements ClientModInitializer {
     public static void openVideo(Minecraft client, String url, int volume, boolean isControlBlocked, boolean canSkip, int optionInMode, int optionInSecs, int optionOutMode, int optionOutSecs) {
         if (!VideoPlayerUtils.hasWaterMedia()) return;
         client.execute(() -> {
+            closeExistingVideoScreen(client);
             Minecraft.getInstance().setScreen(new VideoScreen(url, volume, isControlBlocked, canSkip, optionInMode, optionInSecs, optionOutMode, optionOutSecs));
         });
     }
@@ -113,6 +115,12 @@ public class ClientHandler implements ClientModInitializer {
                 Minecraft.getInstance().setScreen(new RadioScreen(be));
             }
         });
+    }
+
+    private static void closeExistingVideoScreen(Minecraft client) {
+        if (client.screen instanceof VideoScreen screen) {
+            screen.onClose();
+        }
     }
 
     public static void stopVideoIfExists(Minecraft client) {

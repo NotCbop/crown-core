@@ -45,6 +45,7 @@ public class VideoScreen extends AbstractContainerScreen<AbstractContainerMenu> 
     private float fadeStep5 = 0;
     private boolean started;
     private boolean closing = false;
+    private boolean released = false;
     private float volume;
 
     // CONTROL
@@ -301,13 +302,29 @@ public class VideoScreen extends AbstractContainerScreen<AbstractContainerMenu> 
 
     @Override
     public void onClose() {
+        releasePlayer();
         super.onClose();
-        if (started) {
-            started = false;
+    }
+
+    @Override
+    public void removed() {
+        // Also runs when another screen (e.g. a second video) replaces this one,
+        // a path that never goes through onClose(); the native player must still be released.
+        releasePlayer();
+        super.removed();
+    }
+
+    private void releasePlayer() {
+        if (released) return;
+        released = true;
+        started = false;
+        try {
             player.stop();
-            Minecraft.getInstance().getSoundManager().resume();
             player.release();
+        } catch (Exception e) {
+            Reference.LOGGER.error("Failed to release video player", e);
         }
+        Minecraft.getInstance().getSoundManager().resume();
     }
 
     @Override
