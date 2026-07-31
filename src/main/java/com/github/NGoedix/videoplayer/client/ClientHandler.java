@@ -82,6 +82,8 @@ public class ClientHandler implements ClientModInitializer {
         // Video/radio playback needs WaterMedia, which is an optional dependency. Only wire those parts
         // up when it's installed; everything above keeps working without it.
         if (VideoPlayerUtils.hasWaterMedia()) {
+            // Fetch/update the yt-dlp binary now so the first YouTube video doesn't wait on the download.
+            com.github.NGoedix.videoplayer.util.YtDlp.prepareAsync();
             BlockEntityRendererRegistry.register(ModBlockEntities.TV_BLOCK_ENTITY, TVBlockRenderer::new);
             IMG_PAUSED = ImageAPI.renderer("/pictures/paused.png", ClientHandler.class.getClassLoader(), true);
             IMG_STEP10 = ImageAPI.renderer("/pictures/step10.png", ClientHandler.class.getClassLoader(), true);

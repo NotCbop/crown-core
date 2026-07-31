@@ -27,8 +27,10 @@ is an **optional** dependency (`suggests` in `fabric.mod.json`): without it the 
 kill feed / pack reporter work, while the video/radio features stay disabled. All WaterMedia entry
 points are gated on `VideoPlayerUtils.hasWaterMedia()` — most importantly `VideoPlayerBlockEntity.
 requestDisplay()` (so the client BE tick/renderer never touch WaterMedia classes when it's absent) and
-the `ClientHandler` video/music methods + init. `java-youtube-downloader` is shaded into the jar by the
-`jar` task. There is **no Kotlin and no Noxesium** dependency.
+the `ClientHandler` video/music methods + init. YouTube links are resolved at runtime by a standalone
+yt-dlp binary that `util/YtDlp` downloads on demand into `<gamedir>/videoplayer/` (same approach as
+WaterMedia's platform-extension; static Java extractors keep breaking against YouTube). There is
+**no Kotlin and no Noxesium** dependency.
 
 ## Mappings gotcha (important)
 

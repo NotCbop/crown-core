@@ -225,12 +225,21 @@ public class VideoScreen extends AbstractContainerScreen<AbstractContainerMenu> 
     }
 
     @Override
+    public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        // Close hint, drawn last so it sits on top of the video/picture.
+        if (canSkip && !closing) {
+            guiGraphics.drawString(font, Component.literal("Press ESC to close"), 5, height - 13, 0xFFFFFFFF);
+        }
+    }
+
+    @Override
     public boolean keyPressed(KeyEvent event) {
         int pKeyCode = event.key();
         boolean shift = (event.modifiers() & GLFW.GLFW_MOD_SHIFT) != 0;
 
-        // Shift + ESC (Exit)
-        if (canSkip && shift && pKeyCode == 256) {
+        // ESC (Exit)
+        if (canSkip && pKeyCode == 256) {
             this.onClose();
         }
 
