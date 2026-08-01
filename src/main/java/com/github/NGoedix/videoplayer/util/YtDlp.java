@@ -48,17 +48,24 @@ public final class YtDlp {
         });
     }
 
+    // Best H.264 video up to 1080p plus separate m4a audio (VLC plays the audio via :input-slave);
+    // falls back to any <=1080p video+audio pair, then to the best muxed stream (~360p).
+    private static final String VIDEO_FORMAT = "bv*[vcodec^=avc1][height<=1080]+ba[ext=m4a]/bv*[height<=1080]+ba/b";
+    // Audio-only for /playmusic; falls back to a muxed stream whose audio track VLC will play.
+    private static final String AUDIO_FORMAT = "ba[ext=m4a]/ba/b";
+
     /**
-     * Resolves {@code url} to a direct stream URL, or returns {@code null} if yt-dlp produced nothing.
+     * Resolves {@code url} to direct stream URLs, or returns an empty array if yt-dlp produced
+     * nothing. One element = muxed/audio stream; two elements = separate video + audio streams.
      * Blocking (spawns a process); call from a background thread.
      */
-    public static String resolveDirectUrl(String url) throws IOException, InterruptedException {
+    public static String[] resolveStreams(String url, boolean audioOnly) throws IOException, InterruptedException {
         Path bin = binary();
 
-        // -f b = best muxed (single video+audio stream; VLC can't sync separate streams),
-        // -g just prints the direct media url instead of downloading.
+        // -g just prints the direct media url(s) instead of downloading (one per line).
         Process process = new ProcessBuilder(
-                bin.toString(), "--no-playlist", "--no-warnings", "-q", "-f", "b", "-g", url)
+                bin.toString(), "--no-playlist", "--no-warnings", "-q",
+                "-f", audioOnly ? AUDIO_FORMAT : VIDEO_FORMAT, "-g", url)
                 .start();
 
         String stdout;
@@ -73,13 +80,58 @@ public final class YtDlp {
             process.destroyForcibly();
         }
 
-        for (String line : stdout.split("\\R")) {
-            if (line.startsWith("http")) return line.trim();
-        }
-        if (!stderr.isBlank()) {
+        String[] urls = java.util.Arrays.stream(stdout.split("\\R"))
+                .map(String::trim)
+                .filter(line -> line.startsWith("http"))
+                .toArray(String[]::new);
+        if (urls.length == 0 && !stderr.isBlank()) {
             Reference.LOGGER.error("yt-dlp could not resolve '{}': {}", url, stderr.strip());
         }
-        return null;
+        return urls;
+    }
+
+    /**
+     * Downloads {@code url} (selected by {@code format}) into {@code outputDir} as
+     * {@code baseName.<ext>} and returns the final file path, or {@code null} if yt-dlp did not
+     * produce a file. Blocking, potentially for minutes on large videos; call from a background
+     * thread.
+     */
+    public static Path download(String url, String format, Path outputDir, String baseName) throws IOException, InterruptedException {
+        Path bin = binary();
+        Files.createDirectories(outputDir);
+
+        Process process = new ProcessBuilder(
+                bin.toString(), "--no-playlist", "--no-warnings", "--no-simulate", "-q",
+                "--print", "after_move:filepath",
+                "-f", format,
+                "-o", outputDir.resolve(baseName + ".%(ext)s").toString(),
+                url).start();
+
+        // Drain stderr concurrently so a full pipe buffer can't stall the download.
+        CompletableFuture<String> stderrFuture = CompletableFuture.supplyAsync(() -> {
+            try {
+                return new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                return "";
+            }
+        });
+
+        String stdout;
+        try {
+            stdout = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            if (!process.waitFor(15, TimeUnit.MINUTES)) {
+                throw new IOException("yt-dlp download timed out for " + url);
+            }
+        } finally {
+            process.destroyForcibly();
+        }
+
+        for (String line : stdout.split("\\R")) {
+            Path file = Path.of(line.trim());
+            if (!line.isBlank() && Files.exists(file)) return file;
+        }
+        String stderr = stderrFuture.getNow("");
+        throw new IOException("yt-dlp produced no file for " + url + (stderr.isBlank() ? "" : ": " + stderr.strip()));
     }
 
     /** Returns the yt-dlp binary, downloading or updating it first if needed. */

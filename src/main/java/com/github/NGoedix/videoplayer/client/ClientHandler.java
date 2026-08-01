@@ -84,6 +84,7 @@ public class ClientHandler implements ClientModInitializer {
         if (VideoPlayerUtils.hasWaterMedia()) {
             // Fetch/update the yt-dlp binary now so the first YouTube video doesn't wait on the download.
             com.github.NGoedix.videoplayer.util.YtDlp.prepareAsync();
+            com.github.NGoedix.videoplayer.util.VideoPreload.init();
             BlockEntityRendererRegistry.register(ModBlockEntities.TV_BLOCK_ENTITY, TVBlockRenderer::new);
             IMG_PAUSED = ImageAPI.renderer("/pictures/paused.png", ClientHandler.class.getClassLoader(), true);
             IMG_STEP10 = ImageAPI.renderer("/pictures/step10.png", ClientHandler.class.getClassLoader(), true);
@@ -154,7 +155,7 @@ public class ClientHandler implements ClientModInitializer {
             MusicPlayer musicPlayer = new MusicPlayer();
             musicPlayers.add(musicPlayer);
             musicPlayer.setVolume(volume);
-            com.github.NGoedix.videoplayer.util.YoutubeResolver.resolve(url, musicPlayer::start);
+            com.github.NGoedix.videoplayer.util.YoutubeResolver.resolveAudio(url, musicPlayer::start);
         });
     }
 

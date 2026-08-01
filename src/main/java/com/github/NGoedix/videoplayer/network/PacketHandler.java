@@ -1,8 +1,11 @@
 package com.github.NGoedix.videoplayer.network;
 
+import com.github.NGoedix.videoplayer.VideoPlayerUtils;
 import com.github.NGoedix.videoplayer.block.entity.custom.RadioBlockEntity;
 import com.github.NGoedix.videoplayer.block.entity.custom.TVBlockEntity;
 import com.github.NGoedix.videoplayer.client.ClientHandler;
+import com.github.NGoedix.videoplayer.client.VideoToggle;
+import com.github.NGoedix.videoplayer.util.VideoPreload;
 import com.github.NGoedix.videoplayer.killfeed.KillFeed;
 import com.github.NGoedix.videoplayer.killfeed.KillFeedChatListener;
 import com.github.NGoedix.videoplayer.network.packet.*;
@@ -33,6 +36,8 @@ public class PacketHandler {
         PayloadTypeRegistry.playS2C().register(SendCustomVideoMessage.TYPE, SendCustomVideoMessage.CODEC);
         PayloadTypeRegistry.playS2C().register(SendMusicMessage.TYPE, SendMusicMessage.CODEC);
         PayloadTypeRegistry.playS2C().register(PlayBroadcastMessage.TYPE, PlayBroadcastMessage.CODEC);
+        // The client also talks back on crown:play (e.g. "preloaded;<url>" acks the plugin tracks).
+        PayloadTypeRegistry.playC2S().register(PlayBroadcastMessage.TYPE, PlayBroadcastMessage.CODEC);
 
         // C2S receivers (server)
         ServerPlayNetworking.registerGlobalReceiver(VideoUpdateMessage.TYPE, (payload, context) -> {
@@ -54,6 +59,9 @@ public class PacketHandler {
                 }
             });
         });
+
+        // No-op on a Fabric server: the acks are meant for the CrownChampionshipUtils Paper plugin.
+        ServerPlayNetworking.registerGlobalReceiver(PlayBroadcastMessage.TYPE, (payload, context) -> {});
 
         ServerPlayNetworking.registerGlobalReceiver(RadioUpdateMessage.TYPE, (payload, context) -> {
             ServerPlayer player = context.player();
@@ -139,6 +147,50 @@ public class PacketHandler {
                 return;
             }
 
+            // "preload;<url>" — download the video ahead of time so a later play command with the
+            // same url starts instantly from local files (the plugin's /preloadvideo command).
+            if (body.regionMatches(true, 0, "preload;", 0, "preload;".length())) {
+                String url = body.substring("preload;".length()).trim();
+                if (!url.isEmpty() && VideoPlayerUtils.hasWaterMedia() && VideoToggle.isEnabled()) {
+                    VideoPreload.preload(url);
+                }
+                return;
+            }
+
+            if (body.equalsIgnoreCase("stopmusic")) {
+                ClientHandler.stopMusicIfPlaying(context.client());
+                return;
+            }
+
+            // "music;<url>;<volume>" — audio-only playback (the plugin's /playmusic command).
+            if (body.regionMatches(true, 0, "music;", 0, "music;".length())) {
+                String[] p = body.split(";");
+                if (p.length >= 2) {
+                    int volume = p.length > 2 ? parseIntOrDefault(p[2].trim(), 100) : 100;
+                    ClientHandler.playMusic(context.client(), p[1].trim(), volume);
+                }
+                return;
+            }
+
+            // "govideo;<url>;<volume>;<controlBlocked>;<canSkip>;<mode>;<position>;<optInMode>;<optInSecs>;<optOutMode>;<optOutSecs>"
+            // Mirrors SendCustomVideoMessage: only mode 0 (fullscreen) renders client-side.
+            if (body.regionMatches(true, 0, "govideo;", 0, "govideo;".length())) {
+                String[] p = body.split(";");
+                if (p.length >= 6 && parseIntPlain(p[5].trim(), 0) == 0) {
+                    String url = p[1].trim();
+                    int volume = parseIntOrDefault(p[2].trim(), 100);
+                    boolean controlBlocked = Boolean.parseBoolean(p[3].trim());
+                    boolean canSkip = Boolean.parseBoolean(p[4].trim());
+                    int optInMode = p.length > 7 ? parseIntPlain(p[7].trim(), -1) : -1;
+                    int optInSecs = p.length > 8 ? parseIntPlain(p[8].trim(), -1) : -1;
+                    int optOutMode = p.length > 9 ? parseIntPlain(p[9].trim(), -1) : -1;
+                    int optOutSecs = p.length > 10 ? parseIntPlain(p[10].trim(), -1) : -1;
+                    ClientHandler.openVideo(context.client(), url, volume, controlBlocked, canSkip,
+                            optInMode, optInSecs, optOutMode, optOutSecs);
+                }
+                return;
+            }
+
             String[] parts = body.split(";");
             String url = parts[0].trim();
             int volume = parts.length > 1 ? parseIntOrDefault(parts[1].trim(), 100) : 100;
@@ -167,6 +219,15 @@ public class PacketHandler {
     private static int parseIntOrDefault(String value, int fallback) {
         try {
             return Math.max(0, Math.min(100, Integer.parseInt(value)));
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
+    }
+
+    /** Plain int parse without the 0-100 volume clamp (modes and seconds may be -1). */
+    private static int parseIntPlain(String value, int fallback) {
+        try {
+            return Integer.parseInt(value);
         } catch (NumberFormatException e) {
             return fallback;
         }
@@ -219,5 +280,14 @@ public class PacketHandler {
 
     public static void sendC2SRadioUpdateMessage(BlockPos pos, String url, int volume, int tick, boolean isPlaying, boolean exit) {
         ClientPlayNetworking.send(new RadioUpdateMessage(pos, url, volume, tick, isPlaying, exit));
+    }
+
+    /** Sends a plain-text body to the server on crown:play (silently dropped when not in a world). */
+    public static void sendC2SPlayBody(String body) {
+        try {
+            ClientPlayNetworking.send(new PlayBroadcastMessage(body));
+        } catch (Exception ignored) {
+            // Not connected / play phase over — the ack just doesn't get delivered.
+        }
     }
 }

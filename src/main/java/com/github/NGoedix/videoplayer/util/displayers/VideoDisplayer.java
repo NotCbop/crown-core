@@ -76,7 +76,11 @@ public class VideoDisplayer implements IDisplay {
             }
             adjustVolume(volume, minDistance, maxDistance);
             player.setRepeatMode(loop);
-            com.github.NGoedix.videoplayer.util.YoutubeResolver.resolve(url, player::start);
+            if (isOnlyMusic) {
+                com.github.NGoedix.videoplayer.util.YoutubeResolver.resolveAudio(url, player::start);
+            } else {
+                com.github.NGoedix.videoplayer.util.YoutubeResolver.resolve(url, player::start);
+            }
         }
     }
 
