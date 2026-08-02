@@ -26,6 +26,7 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 import java.util.ArrayList;
@@ -94,8 +95,23 @@ public class ClientHandler implements ClientModInitializer {
         }
     }
 
+    // The /video toggle is client-side, so the server can't warn hidden players itself; tell them here
+    // whenever a video command arrives that would have played.
+    private static void notifyVideoHidden(Minecraft client) {
+        client.execute(() -> {
+            if (client.player != null) {
+                client.player.displayClientMessage(
+                        Component.literal("[Video] A video is playing, but you have videos hidden. Use /video on to watch it."), false);
+            }
+        });
+    }
+
     public static void openVideo(Minecraft client, String url, int volume, boolean isControlBlocked, boolean canSkip) {
-        if (!VideoPlayerUtils.hasWaterMedia() || !VideoToggle.isEnabled()) return;
+        if (!VideoPlayerUtils.hasWaterMedia()) return;
+        if (!VideoToggle.isEnabled()) {
+            notifyVideoHidden(client);
+            return;
+        }
         client.execute(() -> {
             closeExistingVideoScreen(client);
             Minecraft.getInstance().setScreen(new VideoScreen(url, volume, isControlBlocked, canSkip, false));
@@ -103,7 +119,11 @@ public class ClientHandler implements ClientModInitializer {
     }
 
     public static void openVideo(Minecraft client, String url, int volume, boolean isControlBlocked, boolean canSkip, int optionInMode, int optionInSecs, int optionOutMode, int optionOutSecs) {
-        if (!VideoPlayerUtils.hasWaterMedia() || !VideoToggle.isEnabled()) return;
+        if (!VideoPlayerUtils.hasWaterMedia()) return;
+        if (!VideoToggle.isEnabled()) {
+            notifyVideoHidden(client);
+            return;
+        }
         client.execute(() -> {
             closeExistingVideoScreen(client);
             Minecraft.getInstance().setScreen(new VideoScreen(url, volume, isControlBlocked, canSkip, optionInMode, optionInSecs, optionOutMode, optionOutSecs));
