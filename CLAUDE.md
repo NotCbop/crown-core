@@ -128,6 +128,18 @@ Everything else — the `trident:icon` / `mcc:icon` / `mcc:hud` fonts and their 
 supplied by the **resource pack the server sends**; the mod does not ship them. Player heads/team
 colours resolve from the tab list, so they only appear for players currently online.
 
+## Server resource packs & version handshake
+
+- `mixin/ServerDataMixin` forces `ServerData.getResourcePackStatus()` to `ENABLED` for **every**
+  server, so server-sent packs are always auto-accepted (no prompt, can never be declined). The
+  Crown pack carries the kill feed fonts, so a decline would silently break the HUD.
+- On play join, `ClientHandler` sends `version;<mod version>` (read from `fabric.mod.json`) C2S on
+  `crown:play`. The CrownChampionshipUtils plugin compares it against config `mod-version.required`
+  and warns (clickable `download-url`) or kicks (`action: warn|kick`) outdated players. Modded
+  clients that register the channel but never report within 5s are treated as pre-handshake builds;
+  vanilla players are ignored. Empty `required` disables the check. `/crown list` shows each
+  player's reported version.
+
 ## Resource-pack failure reporter (`com.github.NGoedix.videoplayer.packlog`)
 
 When a server-sent resource pack fails on a client, this uploads the tail of `logs/latest.log` to

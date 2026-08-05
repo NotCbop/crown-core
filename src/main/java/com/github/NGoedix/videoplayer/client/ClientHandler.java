@@ -23,7 +23,9 @@ import org.watermedia.api.player.videolan.MusicPlayer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -79,6 +81,15 @@ public class ClientHandler implements ClientModInitializer {
 
         // Resource-pack failure -> mclo.gs link in chat
         PackFailureReporter.register();
+
+        // Version handshake: tell the server which mod build this is, so the CrownChampionshipUtils
+        // plugin can warn/kick outdated clients (it treats modded players that never send one as
+        // pre-handshake builds).
+        String modVersion = FabricLoader.getInstance().getModContainer(Reference.MOD_ID)
+                .map(c -> c.getMetadata().getVersion().getFriendlyString())
+                .orElse("unknown");
+        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) ->
+                PacketHandler.sendC2SPlayBody("version;" + modVersion));
 
         // Video/radio playback needs WaterMedia, which is an optional dependency. Only wire those parts
         // up when it's installed; everything above keeps working without it.
