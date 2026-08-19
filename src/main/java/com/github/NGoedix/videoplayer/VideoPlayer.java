@@ -27,7 +27,7 @@ public class VideoPlayer implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        Reference.LOGGER.info("Initializing Crown Championship Utilities");
+        Reference.LOGGER.info("Initializing CrownCore");
 
         ModBlocks.registerModBlocks();
         ModBlockEntities.registerAllBlockEntities();

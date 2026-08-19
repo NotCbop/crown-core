@@ -3,8 +3,8 @@
   "id": "videoplayer",
   "version": "${version}",
 
-  "name": "Crown Championship Utilities",
-  "description": "Crown Championship Utilities — play videos in Minecraft and show a kill feed.",
+  "name": "CrownCore",
+  "description": "Crown Core — utilities for the Crown Championship: videos, kill feed, and more.",
   "authors": [
     "cbop"
   ],

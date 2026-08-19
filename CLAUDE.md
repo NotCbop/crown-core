@@ -4,15 +4,16 @@ Guidance for working in this repository.
 
 ## Project
 
-**Crown Championship Utilities** — a Fabric client/server mod for **Minecraft 1.21.11** (Java 21).
+**CrownCore** (formerly "Crown Championship Utilities") — a Fabric client/server mod for
+**Minecraft 1.21.11** (Java 21).
 It started as NGoedix's *Video Player* mod (play videos/streams on in-world TV & Radio blocks
 via the WaterMedia/VLC backend) and is being expanded with extra utilities. The first added
 feature is a **kill feed HUD**.
 
 - Mod id is still `videoplayer` and the base package is `com.github.NGoedix.videoplayer`
-  (the rename to "Crown Championship Utilities" was **display-name only** — see `fabric.mod.json`,
-  the init log line, and the `itemGroup.videoplayer.items` lang value). Do not rename the id or
-  package; assets/data are keyed off `videoplayer`.
+  (the rename to "CrownCore" is **display-name only** — see `fabric.mod.json`, the init log line,
+  and the `itemGroup.videoplayer.items` lang value). Do not rename the id or package; assets/data
+  are keyed off `videoplayer`.
 
 ## Build & run
 
@@ -133,6 +134,9 @@ colours resolve from the tab list, so they only appear for players currently onl
 - `mixin/ServerDataMixin` forces `ServerData.getResourcePackStatus()` to `ENABLED` for **every**
   server, so server-sent packs are always auto-accepted (no prompt, can never be declined). The
   Crown pack carries the kill feed fonts, so a decline would silently break the HUD.
+- `mixin/PacketErrorMixin` cancels `ClientCommonPacketListenerImpl#onPacketError` (logs the bad
+  packet instead), so a malformed server packet never triggers the "Network Protocol Error"
+  disconnect — a reimplementation of Mobilelize's Network-Protocol-Disconnect mod.
 - On play join, `ClientHandler` sends `version;<mod version>` (read from `fabric.mod.json`) C2S on
   `crown:play`. The CrownChampionshipUtils plugin compares it against config `mod-version.required`
   and warns (clickable `download-url`) or kicks (`action: warn|kick`) outdated players. Modded
