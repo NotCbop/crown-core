@@ -79,6 +79,9 @@ public class ClientHandler implements ClientModInitializer {
         VideoToggle.load();
         VideoCommand.register();
 
+        // Server-controlled F1 hide-GUI block (Crown Championship Utilities)
+        HideUiBlocker.register();
+
         // Resource-pack failure -> mclo.gs link in chat
         PackFailureReporter.register();
 

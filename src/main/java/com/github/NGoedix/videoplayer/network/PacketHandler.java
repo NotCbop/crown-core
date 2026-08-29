@@ -4,6 +4,7 @@ import com.github.NGoedix.videoplayer.VideoPlayerUtils;
 import com.github.NGoedix.videoplayer.block.entity.custom.RadioBlockEntity;
 import com.github.NGoedix.videoplayer.block.entity.custom.TVBlockEntity;
 import com.github.NGoedix.videoplayer.client.ClientHandler;
+import com.github.NGoedix.videoplayer.client.HideUiBlocker;
 import com.github.NGoedix.videoplayer.client.VideoToggle;
 import com.github.NGoedix.videoplayer.util.VideoPreload;
 import com.github.NGoedix.videoplayer.killfeed.KillFeed;
@@ -135,6 +136,15 @@ public class PacketHandler {
                 String[] kf = body.split("\\s+");
                 boolean on = kf.length < 2 || parseOnOff(kf[1]);
                 context.client().execute(() -> KillFeed.setEnabled(on));
+                return;
+            }
+
+            // "blockf1 on|off" — server-side control of the F1 hide-GUI key, so events can keep
+            // titles (loading screens etc.) visible. Same parser path as the kill feed toggle.
+            if (body.regionMatches(true, 0, "blockf1", 0, "blockf1".length())) {
+                String[] bf = body.split("\\s+");
+                boolean on = bf.length < 2 || parseOnOff(bf[1]);
+                context.client().execute(() -> HideUiBlocker.setBlocked(on));
                 return;
             }
 
