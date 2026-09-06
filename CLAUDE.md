@@ -54,7 +54,9 @@ expected. An access widener exists at `src/main/resources/videoplayer.accesswide
 
 ## Layout
 
-- `VideoPlayer.java` — `ModInitializer` (blocks, block entities, commands, creative tab).
+- `VideoPlayer.java` — `ModInitializer` (blocks, block entities, commands). The TV/radio blocks
+  have **no items and no creative tab** — they exist only for command placement (`/setblock`);
+  the mod registers no items at all.
 - `client/ClientHandler.java` — `ClientModInitializer`; registers renderers, packets, and the kill feed.
 - `block/`, `network/`, `client/gui/`, `util/` — the original video player feature.
 - `killfeed/` — the kill feed (see below).

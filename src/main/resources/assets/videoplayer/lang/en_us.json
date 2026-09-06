@@ -1,18 +1,11 @@
 {
-  "itemGroup.videoplayer.items": "CrownCore",
-
   "gui.tv_video_screen.title": "TV Video Screen",
   "gui.tv_video_screen.save": "Save",
 
   "gui.radio_screen.title": "Radio",
 
-  "item.videoplayer.tv_block": "TV",
-  "item.videoplayer.radio_block": "Radio",
-  "item.videoplayer.hand_radio_block": "Hand radio",
-
   "block.videoplayer.tv_block": "TV",
   "block.videoplayer.radio_block": "Radio",
-  "block.videoplayer.hand_radio_block": "Hand radio",
 
   "gui.tv_video_screen.play": "Play",
   "gui.tv_video_screen.pause": "Pause",

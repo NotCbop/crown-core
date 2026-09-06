@@ -8,8 +8,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.RedstoneTorchBlock;
 import net.minecraft.world.level.block.SoundType;
@@ -31,14 +29,13 @@ public class ModBlocks {
         return (blockstate) -> blockstate.getValue(RedstoneTorchBlock.LIT) ? pLightValue : 0;
     }
 
+    // Blocks only — no BlockItems. The TV/radio blocks are placed by server commands
+    // (/setblock etc.), so players never need an item form and none should show up in inventories.
     private static <T extends Block> T registerBlock(String name, Function<BlockBehaviour.Properties, T> factory, BlockBehaviour.Properties properties) {
         Identifier id = Identifier.fromNamespaceAndPath(Reference.MOD_ID, name);
         ResourceKey<Block> blockKey = ResourceKey.create(Registries.BLOCK, id);
         T block = factory.apply(properties.setId(blockKey));
         Registry.register(BuiltInRegistries.BLOCK, blockKey, block);
-
-        ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM, id);
-        Registry.register(BuiltInRegistries.ITEM, itemKey, new BlockItem(block, new Item.Properties().useBlockDescriptionPrefix().setId(itemKey)));
         return block;
     }
 
