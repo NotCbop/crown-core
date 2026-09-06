@@ -103,10 +103,12 @@ those keep their original `trident:`/`mcc:` namespaces.
   per-client in `KillFeedRenderer` (`self.equals(name)`), so it lights up for the attacker or the victim
   on their own screen automatically. Caveat: spectators get the **vanilla** wording, so skript-only
   "while trying to escape X" kills lose the attacker for everyone but the victim.
-- `KillFeedCommand` — client `/killfeed` command. Players may only run `/killfeed side` (flip which
-  edge the feed sits on). Whether the feed shows at all is **server-controlled**, not a player toggle:
-  the CrownChampionshipUtils plugin sends a `killfeed on|off` body on the `crown:play` channel, handled
-  in `PacketHandler` (see `KillFeed.setEnabled`). This hides the feed for non-PvP games.
+- `KillFeedCommand` — client `/killfeed` command: `/killfeed on|off` is the player's own show/hide
+  preference (`KillFeed.userEnabled`, persisted to `config/crown-killfeed.properties` by
+  `KillFeedToggle`), `/killfeed side` flips which edge the feed sits on. The server *also* has its
+  own switch (`KillFeed.enabled`): the CrownChampionshipUtils plugin sends a `killfeed on|off` body
+  on the `crown:play` channel, handled in `PacketHandler` (see `KillFeed.setEnabled`), to hide the
+  feed for non-PvP games. The feed renders only when BOTH are on (`KillFeed.shouldShow()`).
 
 ### Kill feed assets
 

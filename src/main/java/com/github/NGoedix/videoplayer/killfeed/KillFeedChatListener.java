@@ -38,7 +38,7 @@ public final class KillFeedChatListener {
 
     public static void register() {
         ClientReceiveMessageEvents.GAME.register((message, overlay) -> {
-            if (!KillFeed.enabled || overlay) return;
+            if (!KillFeed.shouldShow() || overlay) return;
             handleText(message.getString());
         });
     }

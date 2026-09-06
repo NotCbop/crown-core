@@ -12,6 +12,7 @@ import com.github.NGoedix.videoplayer.killfeed.KillFeed;
 import com.github.NGoedix.videoplayer.killfeed.KillFeedAssets;
 import com.github.NGoedix.videoplayer.killfeed.KillFeedChatListener;
 import com.github.NGoedix.videoplayer.killfeed.KillFeedCommand;
+import com.github.NGoedix.videoplayer.killfeed.KillFeedToggle;
 import com.github.NGoedix.videoplayer.packlog.PackFailureReporter;
 import com.github.NGoedix.videoplayer.network.PacketHandler;
 import com.github.NGoedix.videoplayer.Reference;
@@ -74,6 +75,7 @@ public class ClientHandler implements ClientModInitializer {
         KillFeed.register();
         KillFeedChatListener.register();
         KillFeedCommand.register();
+        KillFeedToggle.load();
 
         // /video on|off client toggle for hiding videos
         VideoToggle.load();

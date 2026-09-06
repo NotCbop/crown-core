@@ -15,11 +15,15 @@ public final class KillFeed {
 
     // --- Options ---
     /**
-     * Whether the feed is shown. Server-controlled: the CrownChampionshipUtils plugin flips this via
-     * the {@code crown:play} channel (a {@code killfeed on|off} body) so admins can hide it for
-     * non-PvP games. Players cannot toggle it. Defaults on.
+     * Server-side switch: the CrownChampionshipUtils plugin flips this via the {@code crown:play}
+     * channel (a {@code killfeed on|off} body) so admins can hide it for non-PvP games. Defaults on.
      */
     public static boolean enabled = true;
+    /**
+     * The player's own preference ({@code /killfeed on|off}), persisted by {@link KillFeedToggle}.
+     * The feed only shows when this AND the server-side {@link #enabled} are true.
+     */
+    public static boolean userEnabled = true;
     public static int maxKills = 5;
     /** Seconds before a kill fades out. 0 = keep until cleared. */
     public static int removeSeconds = 10;
@@ -74,8 +78,23 @@ public final class KillFeed {
         }
     }
 
+    /** Player-driven enable/disable ({@code /killfeed on|off}); persisted across restarts. */
+    public static void setUserEnabled(boolean value) {
+        userEnabled = value;
+        if (!value) {
+            clear();
+            KillFeedChatListener.resetStreaks();
+        }
+        KillFeedToggle.save();
+    }
+
+    /** True when the feed should collect and draw kills: server-enabled AND not hidden by the player. */
+    public static boolean shouldShow() {
+        return enabled && userEnabled;
+    }
+
     private static void tick() {
-        if (!enabled || ENTRIES.isEmpty()) return;
+        if (!shouldShow() || ENTRIES.isEmpty()) return;
         long now = System.currentTimeMillis();
         java.util.Iterator<KillEntry> it = ENTRIES.iterator();
         while (it.hasNext()) {

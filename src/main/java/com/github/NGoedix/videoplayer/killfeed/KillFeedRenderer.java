@@ -50,7 +50,7 @@ public final class KillFeedRenderer {
     private KillFeedRenderer() {}
 
     public static void render(GuiGraphics guiGraphics) {
-        if (!KillFeed.enabled) return;
+        if (!KillFeed.shouldShow()) return;
         List<KillEntry> entries = KillFeed.entries();
         if (entries.isEmpty()) return;
 
