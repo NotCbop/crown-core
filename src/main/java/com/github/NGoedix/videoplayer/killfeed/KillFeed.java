@@ -88,9 +88,12 @@ public final class KillFeed {
         KillFeedToggle.save();
     }
 
-    /** True when the feed should collect and draw kills: server-enabled AND not hidden by the player. */
+    /**
+     * True when the feed should collect and draw kills: on a server running the Crown plugin,
+     * server-enabled, AND not hidden by the player.
+     */
     public static boolean shouldShow() {
-        return enabled && userEnabled;
+        return com.github.NGoedix.videoplayer.client.CrownServer.isPresent() && enabled && userEnabled;
     }
 
     private static void tick() {

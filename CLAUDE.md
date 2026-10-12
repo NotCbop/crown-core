@@ -133,6 +133,17 @@ Everything else — the `trident:icon` / `mcc:icon` / `mcc:hud` fonts and their 
 supplied by the **resource pack the server sends**; the mod does not ship them. Player heads/team
 colours resolve from the tab list, so they only appear for players currently online.
 
+## Crown-server detection (`client/CrownServer.java`)
+
+The kill feed only works on servers running the CrownChampionshipUtils plugin. `CrownServer`
+flips `isPresent()` when Paper's `minecraft:register` announces the `crown:play` channel
+(`C2SPlayChannelEvents.REGISTER`), excluding the integrated/singleplayer server (this mod's own
+server side also announces that channel), and as a fallback when any `crown:play` payload actually
+arrives (`markPresent()` in `PacketHandler`). Reset on disconnect. `KillFeed.shouldShow()` includes
+it, so the chat-parsing path can't produce a feed from similar death messages on other servers.
+The other Crown features (videos, music, F1 block, preload) don't need the gate — they only ever
+fire from `crown:play` payloads the plugin sends.
+
 ## Server resource packs & version handshake
 
 - `mixin/ServerDataMixin` forces `ServerData.getResourcePackStatus()` to `ENABLED` for **every**

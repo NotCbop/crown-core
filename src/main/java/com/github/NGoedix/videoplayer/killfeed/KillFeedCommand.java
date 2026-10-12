@@ -20,9 +20,15 @@ public final class KillFeedCommand {
                 dispatcher.register(ClientCommandManager.literal("killfeed")
                         .then(ClientCommandManager.literal("on").executes(ctx -> {
                             KillFeed.setUserEnabled(true);
-                            feedback(ctx.getSource(), KillFeed.enabled
-                                    ? "Kill feed shown."
-                                    : "Kill feed shown (the server has it hidden right now, so it will appear when a game turns it on).");
+                            String note;
+                            if (!com.github.NGoedix.videoplayer.client.CrownServer.isPresent()) {
+                                note = "Kill feed shown (it only appears on Crown Championship servers).";
+                            } else if (!KillFeed.enabled) {
+                                note = "Kill feed shown (the server has it hidden right now, so it will appear when a game turns it on).";
+                            } else {
+                                note = "Kill feed shown.";
+                            }
+                            feedback(ctx.getSource(), note);
                             return 1;
                         }))
                         .then(ClientCommandManager.literal("off").executes(ctx -> {

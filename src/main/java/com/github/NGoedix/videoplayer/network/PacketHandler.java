@@ -123,6 +123,9 @@ public class PacketHandler {
 
         // Simple plain-string channel for non-mod servers (Paper plugins, Skript, etc.).
         ClientPlayNetworking.registerGlobalReceiver(PlayBroadcastMessage.TYPE, (payload, context) -> {
+            // Anything arriving on crown:play proves the Crown plugin is on this server.
+            com.github.NGoedix.videoplayer.client.CrownServer.markPresent();
+
             String body = payload.body().trim();
             if (body.isEmpty()) return;
 

@@ -70,6 +70,10 @@ public class ClientHandler implements ClientModInitializer {
 
         PacketHandler.registerS2CPackets();
 
+        // Detects whether the server runs the CrownChampionshipUtils plugin; Crown features
+        // (kill feed etc.) stay dormant everywhere else.
+        CrownServer.register();
+
         // Kill feed (Crown Championship Utilities) — works with or without WaterMedia.
         KillFeedAssets.register();
         KillFeed.register();
