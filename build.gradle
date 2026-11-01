@@ -9,18 +9,10 @@ group = project.maven_group
 
 repositories {
 	maven { url 'https://repo.spongepowered.org/maven' }
-	maven { url 'https://jitpack.io' }
-	maven {
-		url 'https://www.cursemaven.com'
-		content {
-			includeGroup "curse.maven"
-		}
-	}
 	mavenCentral()
 }
 
 loom {
-	accessWidenerPath = file("src/main/resources/${modid}.accesswidener")
 	mods {
 		"${modid}" {
 			sourceSet sourceSets.main
@@ -36,17 +28,10 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-	// WaterMedia provides the multimedia (VLC) backend.
-	// `implementation` is the compile classpath; `include` bundles WaterMedia into our jar via
-	// Fabric jar-in-jar so players install a single mod (used with the owner's permission — its
-	// PolyForm Strict license otherwise forbids redistribution). WaterMedia ships as a finished
-	// multiloader mod jar (its own fabric.mod.json, shaded deps, no Minecraft-mapped refs), so it
-	// is nested as-is with no remapping.
-	implementation 'com.github.WaterMediaTeam:watermedia:2.1.37'
-	include 'com.github.WaterMediaTeam:watermedia:2.1.37'
-
-	// YouTube link resolution is done at runtime by a standalone yt-dlp binary that YtDlp downloads
-	// on demand (java-youtube-downloader was removed: it broke against modern YouTube).
+	// Pure-Java H.264 decoder for the loading screen's background clips (no native libs, ~1 MB).
+	// Jar-in-jar'd so players don't need anything extra.
+	implementation "org.jcodec:jcodec:0.2.5"
+	include "org.jcodec:jcodec:0.2.5"
 }
 
 base {

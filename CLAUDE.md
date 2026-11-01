@@ -6,14 +6,16 @@ Guidance for working in this repository.
 
 **CrownCore** (formerly "Crown Championship Utilities") — a Fabric client/server mod for
 **Minecraft 1.21.11** (Java 21).
-It started as NGoedix's *Video Player* mod (play videos/streams on in-world TV & Radio blocks
-via the WaterMedia/VLC backend) and is being expanded with extra utilities. The first added
-feature is a **kill feed HUD**.
+It started as NGoedix's *Video Player* mod, but **all video/music playback, the TV/radio blocks
+and the WaterMedia dependency have been removed** (2026-10-31) — what remains is the Crown
+utilities: kill feed HUD, game loading screens (with grayscale background clips, decoded in pure
+Java by JCodec — not WaterMedia), F1 block, resource-pack handling, version handshake. The mod
+registers **no blocks, items or commands server-side**; the jar is ~4.3 MB (JCodec ~2 MB + the
+bundled clips ~2 MB).
 
 - Mod id is still `videoplayer` and the base package is `com.github.NGoedix.videoplayer`
-  (the rename to "CrownCore" is **display-name only** — see `fabric.mod.json`, the init log line,
-  and the `itemGroup.videoplayer.items` lang value). Do not rename the id or package; assets/data
-  are keyed off `videoplayer`.
+  (the rename to "CrownCore" is **display-name only** — see `fabric.mod.json` and the init log
+  line). Do not rename the id or package. Mod assets live under the `crown` namespace.
 
 ## Build & run
 
@@ -23,15 +25,9 @@ feature is a **kill feed HUD**.
 .\gradlew.bat runClient          # launch a dev client; use the IDE Debug config for hot-swap
 ```
 
-Runtime mods needed alongside this one: **Fabric API** (required). **WaterMedia** (the video backend)
-is an **optional** dependency (`suggests` in `fabric.mod.json`): without it the mod still loads and the
-kill feed / pack reporter work, while the video/radio features stay disabled. All WaterMedia entry
-points are gated on `VideoPlayerUtils.hasWaterMedia()` — most importantly `VideoPlayerBlockEntity.
-requestDisplay()` (so the client BE tick/renderer never touch WaterMedia classes when it's absent) and
-the `ClientHandler` video/music methods + init. YouTube links are resolved at runtime by a standalone
-yt-dlp binary that `util/YtDlp` downloads on demand into `<gamedir>/videoplayer/` (same approach as
-WaterMedia's platform-extension; static Java extractors keep breaking against YouTube). There is
-**no Kotlin and no Noxesium** dependency.
+Runtime mods needed alongside this one: **Fabric API** (required). Nothing else — there is
+**no WaterMedia, no Kotlin and no Noxesium** dependency. The only library is **JCodec 0.2.5**
+(pure-Java H.264 decoder, no natives), jar-in-jar'd via `include` in `build.gradle`.
 
 ## Mappings gotcha (important)
 
@@ -50,17 +46,17 @@ When unsure of a mapped name, **verify against the loom tiny file instead of gue
 Mixins live in `com.github.NGoedix.videoplayer.mixin` and are declared in
 `src/main/resources/videoplayer.mixins.json` (client-only entries go in its `client` array). Loom
 remaps mixin refs in-place, so there is **no separate refmap file** in the built jar — that is
-expected. An access widener exists at `src/main/resources/videoplayer.accesswidener`.
+expected. There is no access widener.
 
 ## Layout
 
-- `VideoPlayer.java` — `ModInitializer` (blocks, block entities, commands). The TV/radio blocks
-  have **no items and no creative tab** — they exist only for command placement (`/setblock`);
-  the mod registers no items at all.
-- `client/ClientHandler.java` — `ClientModInitializer`; registers renderers, packets, and the kill feed.
-- `block/`, `network/`, `client/gui/`, `util/` — the original video player feature.
+- `VideoPlayer.java` — `ModInitializer`: only registers the `crown:play` payload type (both sides).
+- `client/ClientHandler.java` — `ClientModInitializer`; wires up everything below.
+- `network/PacketHandler.java` + `network/packet/PlayBroadcastMessage.java` — the `crown:play` channel.
 - `killfeed/` — the kill feed (see below).
-- `packlog/` + `mixin/` — the resource-pack-failure log uploader (see below).
+- `loading/` — the game loading screen (see below).
+- `client/CrownServer.java`, `client/HideUiBlocker.java` — Crown-server detection, F1 block.
+- `packlog/` + `mixin/` — resource-pack handling and the packet-error fix (see below).
 
 ## Kill feed (`com.github.NGoedix.videoplayer.killfeed`)
 
@@ -133,6 +129,44 @@ Everything else — the `trident:icon` / `mcc:icon` / `mcc:hud` fonts and their 
 supplied by the **resource pack the server sends**; the mod does not ship them. Player heads/team
 colours resolve from the tab list, so they only appear for players currently online.
 
+## Loading screen (`com.github.NGoedix.videoplayer.loading`)
+
+`LoadingScreen` is Crown's animated game-loading overlay. Its textures are under
+`assets/crown/textures/loading/` and come from the Celestesium mod (MIT), with the background and
+glow recolored from purple to blue: `background.png` (1024x576, cover-fit with a slow breathing
+zoom), `glow.png` (256, pulsing blue halo behind the icon), `games/<game>.png` (the big center
+icon) and `side/<game>.png` (grey icons drifting in two opposite-scrolling columns along the screen
+edges; the list repeats down the whole column so there's never a gap). The rest is procedural: the
+icon's easeOutBack pop + bob/sway, the title/subtitle fades, and a **thin rounded yellow progress line** (3 gui px)
+(`pill()` fills rows at half-gui-pixel resolution so the caps stay round; faint blue edge, soft yellow glow + shimmer
+sweep). If the game is unknown or missing, the 16x16 pixel-art Crown crown (`crown.png`, drawn with
+the same pop/bob/sway) takes the icon's place. The game table (aliases like `skb`/`sky_battle`,
+display names, icon sizes) lives in its static block. Registered via `HudRenderCallback` **after**
+the kill feed so it draws on top; cleared on disconnect.
+
+**Background clips** (`LoadingClips` + `ClipPlayer`): the game's mp4s under
+`assets/crown/loading_clips/<game>/` (a game without a folder plays `hub/`) cycle behind the
+overlay — shuffled, 5 s each, 1.2 s crossfades, max two alive — tinted gray-blue and darkened by
+`drawClipShade`. Each `ClipPlayer` decodes on its own daemon thread with JCodec at 30 fps, reads
+only the luma plane (clips are stored grayscale), and the render thread uploads the newest frame
+into a linear-filtered `DynamicTexture`. JCodec only handles **H.264 baseline**, so always add
+clips through `tools/encode-loading-clips.ps1` (needs ffmpeg): put raw clips in
+`loading-clips-src/<game>/` (gitignored) and run
+`powershell -ExecutionPolicy Bypass -File tools\encode-loading-clips.ps1` — it outputs 640x360,
+30 fps, grayscale, baseline, first 10 s, ~250-500 KB each. Clips come through the resource
+manager, so a resource pack can add/replace them too.
+
+Everything that moves is placed with **float pose transforms** (translate/scale), never
+`Math.round`ed blit coordinates — rounding made the side icons twitch a pixel back and forth. Clock
+math is done in `double` (`now * 0.018f` in float has no precision at epoch-millis magnitudes).
+
+Driven by the plugin over `crown:play`: `loadscreen;<seconds 1-120>;<title>;<subtitle>;<game>`
+shows it (a blank title falls back to the game's name; the bar fills across the duration, then it
+fades out **on its own** — a missed "off" can't trap anyone), `loadscreen off` dismisses early.
+Plugin command: `/loadscreen <target> <seconds> <game|none> [title][|<subtitle>]` or
+`/loadscreen <target> off` (also a `/crown` subcommand); `|` splits title/subtitle, `;` is
+stripped (it's the body separator).
+
 ## Crown-server detection (`client/CrownServer.java`)
 
 The kill feed only works on servers running the CrownChampionshipUtils plugin. `CrownServer`
@@ -141,8 +175,8 @@ flips `isPresent()` when Paper's `minecraft:register` announces the `crown:play`
 server side also announces that channel), and as a fallback when any `crown:play` payload actually
 arrives (`markPresent()` in `PacketHandler`). Reset on disconnect. `KillFeed.shouldShow()` includes
 it, so the chat-parsing path can't produce a feed from similar death messages on other servers.
-The other Crown features (videos, music, F1 block, preload) don't need the gate — they only ever
-fire from `crown:play` payloads the plugin sends.
+The other Crown features (loading screen, F1 block) don't need the gate — they only ever fire from
+`crown:play` payloads the plugin sends.
 
 ## Server resource packs & version handshake
 

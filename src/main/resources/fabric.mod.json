@@ -4,7 +4,7 @@
   "version": "${version}",
 
   "name": "CrownCore",
-  "description": "Crown Core — utilities for the Crown Championship: videos, kill feed, and more.",
+  "description": "Crown Core — utilities for the Crown Championship: kill feed, game loading screens, and more.",
   "authors": [
     "cbop"
   ],
@@ -28,8 +28,5 @@
     "fabricloader": ">=0.16.0",
     "minecraft": "~1.21.11",
     "java": ">=21"
-  },
-  "suggests": {
-    "watermedia": "2.1.37"
   }
 }

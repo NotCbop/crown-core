@@ -13,8 +13,8 @@ import java.nio.file.Path;
 import java.util.Properties;
 
 /**
- * Persists the player's own kill feed preference ({@code /killfeed on|off}) across restarts,
- * same pattern as {@link com.github.NGoedix.videoplayer.client.VideoToggle}.
+ * Persists the player's own kill feed preference ({@code /killfeed on|off}) across restarts, in
+ * {@code config/crown-killfeed.properties}.
  */
 @Environment(EnvType.CLIENT)
 public final class KillFeedToggle {

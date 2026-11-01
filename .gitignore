@@ -38,3 +38,7 @@ hs_err_*.log
 replay_*.log
 *.hprof
 *.jfr
+
+# raw loading-screen clips (encoded copies live in src/main/resources/assets/crown/loading_clips)
+
+loading-clips-src/
