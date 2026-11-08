@@ -193,6 +193,17 @@ The other Crown features (loading screen, F1 block) don't need the gate — they
   vanilla players are ignored. Empty `required` disables the check. `/crown list` shows each
   player's reported version.
 
+## Cheat client reporting (`anticheat/AntiCheatScanner.java`)
+
+The plugin sends `acscan;<probe|probe...>` on join and every few minutes. The mod replies with
+`acreport;<section>;<a|b|c>` per section (`mods`, `keys`, `found`, `agents`, `libs`), then
+`acreport;done`. The mod only gathers facts: **signatures live in the plugin's `anticheat:` config**,
+so they change without a mod update and can't be read from the mod jar. It stays inside the game
+process (no process list, no disk scanning) and sends file names only, never paths. A modified
+client can lie, so a clean report proves nothing. Behaviour cheats (kill aura, fly) need a
+server-side anticheat. `ALLOWED_SERVER_HOSTS` limits which servers may request a scan (the address
+typed into the client must match), so **add any test server's address there** or it reports "no scan reply".
+
 ## Resource-pack failure reporter (`com.github.NGoedix.videoplayer.packlog`)
 
 When a server-sent resource pack fails on a client, this uploads the tail of `logs/latest.log` to

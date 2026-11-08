@@ -1,5 +1,6 @@
 package com.github.NGoedix.videoplayer.network;
 
+import com.github.NGoedix.videoplayer.anticheat.AntiCheatScanner;
 import com.github.NGoedix.videoplayer.client.CrownServer;
 import com.github.NGoedix.videoplayer.client.HideUiBlocker;
 import com.github.NGoedix.videoplayer.killfeed.KillFeed;
@@ -13,7 +14,8 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 /**
  * The {@code crown:play} plugin channel shared with the CrownChampionshipUtils Paper plugin: plain
  * UTF-8 bodies (see {@link PlayBroadcastMessage}). S2C: {@code killfeed on|off}, {@code killmsg <text>},
- * {@code blockf1 on|off}, {@code loadscreen;...}. C2S: {@code version;<mod version>}.
+ * {@code blockf1 on|off}, {@code loadscreen;...}, {@code acscan;...}. C2S: {@code version;<mod version>},
+ * {@code acreport;...}.
  */
 public class PacketHandler {
 
@@ -34,6 +36,13 @@ public class PacketHandler {
 
             String body = payload.body().trim();
             if (body.isEmpty()) return;
+
+            // "acscan;<probe|probe...>" — the plugin asks what this client has loaded (see AntiCheatScanner).
+            if (body.regionMatches(true, 0, "acscan", 0, "acscan".length())) {
+                String probes = body.length() > "acscan;".length() ? body.substring("acscan;".length()) : "";
+                context.client().execute(() -> AntiCheatScanner.run(probes));
+                return;
+            }
 
             // "killfeed on|off" — server-side control of the kill feed (e.g. hide it for non-PvP games).
             if (body.regionMatches(true, 0, "killfeed", 0, "killfeed".length())) {
